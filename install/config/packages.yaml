@@ -1,0 +1,37 @@
+apt_packages:
+  - awesome
+  - kitty
+  - rofi
+  - curl
+  - tailscale
+  - tmux
+  - net-tools
+  - htop
+  - btop
+  - fzf
+  - zoxide
+  - arandr
+  - blueman
+  - vlc
+  - software-properties-common
+  - zsh
+  - fuse
+
+pip_packages:
+  - torch
+  - torchvision
+  - torchaudio
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scikit-learn
+  - h5py
+  - requests
+  - rich
+
+snap_packages:
+  - "code --classic"    # Visual Studio Code
+  - "spotify"           # Spotify
+  - "slack"             # Slack
+  - "teams-for-linux"   # Teams
