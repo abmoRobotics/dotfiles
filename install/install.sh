@@ -362,14 +362,14 @@ install_configs() {
     CONFIGS=($(yq e '.configs[]' "$CONFIGS_YAML"))
 
     # Directory where your dotfiles are located
-    DOTFILES_DIR="$(pwd)/dotfiles"
+    DOTFILES_DIR="$(pwd)/.."
 
     # Iterate over each config and create symlinks
     for config in "${CONFIGS[@]}"; do
         echo "Processing configuration: $config"
 
         SOURCE_DIR="$DOTFILES_DIR/$config"
-        TARGET_DIR="$HOME/.config/$config"
+        TARGET_DIR="$HOME/$config"
 
         # Check if source directory exists
         if [ ! -d "$SOURCE_DIR" ]; then
@@ -435,8 +435,7 @@ show_menu() {
     echo "2) Install Git and configure GitHub"
     echo "3) Install Docker"
     echo "4) Install optional packages and configure symlinks"
-    echo "5) Clone dotfiles repository"
-    echo "6) Install everything"
+    echo "5) Install everything"
     echo "e) Exit"
 }
 
@@ -456,7 +455,6 @@ while true; do
             ;;
         4)
             install_extras
-            ;;
             ;;
         5)
             echo "Installing everything..."

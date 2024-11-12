@@ -1,7 +1,7 @@
 configs:
-- awesome 
-- btop
-- kitty
-- nvim
-- picom
-- rofi
+- .config/awesome 
+- .config/btop
+- .config/kitty
+- .config/nvim
+- .config/picom
+- .config/rofi
