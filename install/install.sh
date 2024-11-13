@@ -201,8 +201,23 @@ install_main(){
     done
 
     install_configs
+        # Install Oh My Sh
+    install_oh_my_sh
+
+    # Read whether Oh My Sh is installed
+    CONFIG_FILE="config/configs.yaml"
+    INSTALL_OH_MY_SH=$(yq e '.oh_my_sh.install' "$CONFIG_FILE")
+
+    if [[ "$INSTALL_OH_MY_SH" == "true" ]]; then
+        # Install Zsh Plugins based on configs.yaml
+        install_zsh_plugins
+
+    else
+        echo "Oh My Sh is not installed. Skipping Zsh plugins installation."
+    fi
 
     echo "Main installation complete."
+
 }
 
 
@@ -311,6 +326,90 @@ install_latex() {
     fi
 }
 
+# Function to clone repositories based on config/repositories.yaml
+clone_repos() {
+    CONFIG_FILE="config/repositories.yaml"
+
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Configuration file $CONFIG_FILE not found."
+        return 1
+    fi
+
+    echo "Cloning repositories as per $CONFIG_FILE..."
+
+    # Read the number of repositories
+    repo_count=$(yq e '.repositories | length' "$CONFIG_FILE")
+
+    for i in $(seq 0 $(($repo_count - 1))); do
+        repo_url=$(yq e ".repositories[$i].url" "$CONFIG_FILE")
+        destination=$(yq e ".repositories[$i].destination" "$CONFIG_FILE")
+        folder_name=$(yq e ".repositories[$i].folder_name // \"\"" "$CONFIG_FILE")
+
+        # Remove quotes if any
+        repo_url=$(echo "$repo_url" | tr -d '"')
+        destination=$(echo "$destination" | tr -d '"')
+        folder_name=$(echo "$folder_name" | tr -d '"')
+
+        # **Expand ~ to $HOME**
+        if [[ "$destination" == ~* ]]; then
+            destination="${destination/#\~/$HOME}"
+        fi
+
+        if [ -z "$repo_url" ] || [ -z "$destination" ]; then
+            echo "Invalid configuration for repository index $i."
+            continue
+        fi
+
+        # Determine the target directory name
+        if [ -n "$folder_name" ]; then
+            target_dir="$destination/$folder_name"
+            echo "Using custom folder name '$folder_name' for repository."
+        else
+            # Derive repository name from URL
+            repo_name=$(basename "$repo_url" .git)
+            target_dir="$destination/$repo_name"
+            echo "No folder_name provided or it is empty. Using repository name '$repo_name'."
+        fi
+
+        # Create the destination directory if it doesn't exist
+        if [ ! -d "$destination" ]; then
+            echo "Creating base directory $destination..."
+            mkdir -p "$destination"
+            if [ $? -ne 0 ]; then
+                echo "Failed to create directory $destination. Skipping repository index $i."
+                continue
+            fi
+        else
+            echo "Base directory $destination already exists."
+        fi
+
+        # Check if the target directory exists and is a Git repository
+        if [ -d "$target_dir/.git" ]; then
+            existing_url=$(git -C "$target_dir" config --get remote.origin.url)
+            if [ "$existing_url" == "$repo_url" ]; then
+                echo "Repository already cloned at $target_dir. Pulling latest changes..."
+                git -C "$target_dir" pull
+            else
+                echo "Directory $target_dir exists but is linked to a different repository ($existing_url). Skipping clone."
+            fi
+        elif [ -d "$target_dir" ]; then
+            echo "Directory $target_dir exists but is not a Git repository. Skipping clone to avoid overwriting."
+        else
+            echo "Cloning $repo_url into $target_dir..."
+            git clone "$repo_url" "$target_dir"
+            if [ $? -ne 0 ]; then
+                echo "Failed to clone repository $repo_url into $target_dir."
+                continue
+            fi
+        fi
+
+        echo ""  # Add an empty line for readability
+    done
+
+    echo "Repository cloning completed."
+}
+
+
 install_docker() {
     echo "Installing Docker..."
 
@@ -410,6 +509,119 @@ install_configs() {
     echo "Configuration symlinks installation complete."
 }
 
+install_oh_my_sh() {
+    echo "Checking if Oh My Sh installation is enabled in configs.yaml..."
+
+    CONFIG_FILE="config/configs.yaml"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Configuration file $CONFIG_FILE not found. Skipping Oh My Sh installation."
+        return 1
+    fi
+
+    INSTALL_OH_MY_SH=$(yq e '.oh_my_sh.install' "$CONFIG_FILE")
+
+    if [[ "$INSTALL_OH_MY_SH" != "true" ]]; then
+        echo "Oh My Sh installation is disabled in configs.yaml. Skipping."
+        return 0
+    fi
+
+    echo "Installing Oh My Sh..."
+
+    # Check if Oh My Sh is already installed
+    if [ -d "$HOME/.oh-my-sh" ]; then
+        echo "Oh My Sh is already installed. Skipping installation."
+    else
+        echo "Cloning Oh My Sh repository..."
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmysh/oh-my-sh/master/tools/install.sh)"
+
+        if [ $? -eq 0 ]; then
+            echo "Oh My Sh installed successfully."
+        else
+            echo "Failed to install Oh My Sh. Please check for errors."
+            return 1
+        fi
+    fi
+
+    # Apply custom theme if specified
+    CUSTOM_THEME=$(yq e '.oh_my_sh.theme' "$CONFIG_FILE")
+
+    if [ -n "$CUSTOM_THEME" ] && [ "$CUSTOM_THEME" != "null" ]; then
+        THEME_SOURCE="$(pwd)/../.config/oh-my-sh/$CUSTOM_THEME"
+        THEME_DEST="$HOME/.oh-my-sh/themes/$CUSTOM_THEME"
+
+        if [ -f "$THEME_SOURCE" ]; then
+            cp "$THEME_SOURCE" "$THEME_DEST"
+            echo "Custom theme '$CUSTOM_THEME' copied to Oh My Sh themes directory."
+
+            # Update Oh My Sh configuration to use the custom theme
+            sed -i "s/^export OSH_THEME=.*/export OSH_THEME=\"$CUSTOM_THEME\"/" "$HOME/.zshrc"
+
+            echo "Oh My Sh theme set to '$CUSTOM_THEME'."
+        else
+            echo "Custom theme source $THEME_SOURCE does not exist. Skipping theme setup."
+        fi
+    fi
+
+    # Check if default in config
+    DEFAULT_SHELL=$(yq e '.oh_my_sh.default_shell' "$CONFIG_FILE")
+
+    if [ -n "$DEFAULT_SHELL" ] && [ "$DEFAULT_SHELL" != "null" ]; then
+        # Set the default shell to Oh My Sh
+        chsh -s "$(command -v zsh)"
+        echo "Default shell set to Oh My Sh."
+    fi
+    
+
+    echo "Oh My Sh installation and configuration complete."
+}
+
+install_zsh_plugins() {
+    echo "Installing Zsh plugins based on configs.yaml..."
+
+    CONFIG_FILE="config/configs.yaml"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Configuration file $CONFIG_FILE not found. Skipping Zsh plugins installation."
+        return 1
+    fi
+
+    # Read the list of Zsh plugins from configs.yaml
+    plugin_count=$(yq e '.zsh_plugins | length' "$CONFIG_FILE")
+
+    if [ "$plugin_count" -eq 0 ]; then
+        echo "No Zsh plugins specified in configs.yaml. Skipping."
+        return 0
+    fi
+
+    ZSH_CUSTOM="$HOME/.oh-my-sh/custom/plugins"
+    mkdir -p "$ZSH_CUSTOM/plugins"
+
+    for i in $(seq 0 $(($plugin_count - 1))); do
+        plugin_name=$(yq e ".zsh_plugins[$i].name" "$CONFIG_FILE")
+        install_plugin=$(yq e ".zsh_plugins[$i].install" "$CONFIG_FILE")
+        plugin_repo=$(yq e ".zsh_plugins[$i].repo" "$CONFIG_FILE")
+
+        if [[ "$install_plugin" != "true" ]]; then
+            echo "Skipping plugin $plugin_name as per configs.yaml."
+            continue
+        fi
+
+        plugin_dir="$ZSH_CUSTOM/plugins/$plugin_name"
+
+        if [ -d "$plugin_dir" ]; then
+            echo "Plugin $plugin_name is already installed. Skipping."
+        else
+            echo "Installing plugin $plugin_name..."
+            git clone "$plugin_repo" "$plugin_dir"
+            if [ $? -eq 0 ]; then
+                echo "Plugin $plugin_name installed successfully."
+            else
+                echo "Failed to install plugin $plugin_name."
+            fi
+        fi
+    done
+
+    echo "Zsh plugins installation based on configs.yaml completed."
+}
 
 generate_ssh_key() {
     email=$1
@@ -443,13 +655,49 @@ generate_ssh_key() {
 show_menu() {
     echo "Please choose an installation option:"
     echo "1) Install main application"
-    echo "2) Install Git and configure GitHub"
+    echo "2) Git Operations"
     echo "3) Install Docker"
     echo "4) Install optional packages and configure symlinks"
     echo "5) Install everything"
     echo "e) Exit"
 }
 
+# Function to show the Git sub-menu
+show_git_menu() {
+    echo "Please choose a Git installation option:"
+    echo "1) Install Git"
+    echo "2) Clone Repositories"
+    echo "3) Install & Configure Git + Clone Repositories"
+    echo "e) Return to main menu"
+}
+
+# Function to handle Git sub-menu choices
+handle_git_menu() {
+    while true; do
+        show_git_menu
+        read -p "Enter your choice [1-3 or e]: " git_choice
+        case $git_choice in
+            1)
+                install_git
+                ;;
+            2)
+                clone_repos
+                ;;
+            3)
+                install_git
+                clone_repos
+                ;;
+            e|E)
+                echo "Returning to main menu."
+                break
+                ;;
+            *)
+                echo "Invalid choice. Please enter 1, 2, 3, or e."
+                ;;
+        esac
+        echo ""
+    done
+}
 # Main loop
 while true; do
     show_menu
@@ -459,7 +707,7 @@ while true; do
             install_main
             ;;
         2) 
-            install_github
+            handle_git_menu
        	    ;;
         3) 
             install_docker

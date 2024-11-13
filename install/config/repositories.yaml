@@ -1,0 +1,29 @@
+repositories:
+  - url: "git@github.com:AAU-Space-Robotics/aau-rover.git"
+    destination: "~/ws/projects/aauspacerobotics"
+    folder_name: "aau_rover"
+
+  - url: "git@github.com:AAU-Space-Robotics/aau-rover-hardware.git"
+    destination: "~/ws/projects/aauspacerobotics"
+    folder_name: "aau_rover_hardware"
+
+  - url: "git@github.com:AAU-Space-Robotics/rover-software.git"
+    destination: "~/ws/projects/aauspacerobotics"
+    folder_name: "rover_software"
+
+  - url: "git@github.com:abmoRobotics/RLRoverLab.git"
+    destination: "~/ws/projects"
+    folder_name: ""
+
+  - url: "git@github.com:abmoRobotics/dotfiles.git"
+    destination: "~/"
+    folder_name: ""
+
+  - url: "https://git@git.overleaf.com/67348c2ff6fb7b91ca694494"
+    destination: "~/ws/overleaf"
+    folder_name: "survey_paper"
+
+  - url: "https://git@git.overleaf.com/66fd180c5379ca1aec20e83d"
+    destination: "~/ws/overleaf"
+    folder_name: "phd_plan"
+

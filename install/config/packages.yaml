@@ -19,6 +19,7 @@ apt_packages:
   - zotero
   - i3lock-fancy
   - xautolock
+  - fd-find
 
 pip_packages:
   - torch

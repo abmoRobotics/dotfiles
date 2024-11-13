@@ -161,24 +161,30 @@ function rb() {
 }
 
 
-. "$HOME/.cargo/env"
-alias yazi='/home/anton/apps/yazi/target/release/yazi'
+# . "$HOME/.cargo/env"
+# alias yazi='/home/anton/apps/yazi/target/release/yazi'
 
-function y() {
-    local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-    yazi "$@" --cwd-file="$tmp"
-    if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-        builtin cd -- "$cwd"
-    fi
-    rm -f -- "$tmp"
-}
+# function y() {
+#     local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+#     yazi "$@" --cwd-file="$tmp"
+#     if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+#         builtin cd -- "$cwd"
+#     fi
+#     rm -f -- "$tmp"
+# }
 
 eval "$(zoxide init posix --hook prompt)"
 eval "$(zoxide init zsh)"
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 alias e='exit && exit'
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+alias fd='fdfind'
+# eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+# export FZF_DEFAULT_COMMAND='fdfind --type f'
+# export FZF_DEFAULT_OPTS="--layout=reverse --inline-info --height=80%"
+# export FZF_DEFAULT_COMMAND="fd . $HOME"
+# export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+# export FZF_ALT_C_COMMAND="fd -t d . $HOME"

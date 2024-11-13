@@ -118,10 +118,7 @@ fi
 
 ## Custom 
 # Ask if the user wants to initialize conda
-read -p "Do you want to initialize conda? (y/n): " use_conda
-
-if [ "$use_conda" = "y" ]; then
-    # !! Contents within this block are managed by 'conda init' !!
+function c() {
     __conda_setup="$('/home/anton/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
     if [ $? -eq 0 ]; then
         eval "$__conda_setup"
@@ -133,35 +130,53 @@ if [ "$use_conda" = "y" ]; then
         fi
     fi
     unset __conda_setup
-else
-    # Always ensure conda is available for manual activation
-    if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/anton/anaconda3/etc/profile.d/conda.sh"
-    fi
-    source /opt/ros/humble/setup.bash
-    echo "ROS 2 Humble sourced."
-    # Optionally source ROS 2 Humble if conda is not initialized
-    #read -p "Do you want to source ROS 2 Humble instead? (y/n): " use_ros2
-    # if [ "$use_ros2" = "y" ]; then
-    #     source /opt/ros/humble/setup.bash
-    #     echo "ROS 2 Humble sourced."
-    # else
-    #     echo "Neither conda nor ROS 2 Humble initialized."
-    # fi
-fi
-. "$HOME/.cargo/env"
-alias yazi='/home/anton/apps/yazi/target/release/yazi'
-function y() {
-	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
-	yazi "$@" --cwd-file="$tmp"
-	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
-		builtin cd -- "$cwd"
-	fi
-	rm -f -- "$tmp"
 }
 
+# Function to source ROS environment
+function r() {
+    if [ -d "./install" ]; then
+        if [ -f "./install/setup.bash" ]; then
+            source ./install/setup.bash
+            echo "Local ROS 2 Humble sourced."
+        else
+            echo "Local setup.bash does not exist."
+        fi
+    else
+        if [ -f "/opt/ros/humble/setup.bash" ]; then
+            source /opt/ros/humble/setup.bash
+            echo "System ROS 2 Humble sourced."
+        else
+            echo "/opt/ros/humble/setup.bash does not exist."
+        fi
+    fi
+}
+
+# Function to build ROS 2 workspace
+function rb() {
+    source /opt/ros/humble/setup.bash
+    colcon build
+    if [ -f "./install/setup.bash" ]; then
+        source ./install/setup.bash
+        echo "Build complete and local workspace sourced."
+    else
+        echo "Build complete, but no local 'install/setup.bash' found to source."
+    fi
+}
+
+# . "$HOME/.cargo/env"
+# alias yazi='/home/anton/apps/yazi/target/release/yazi'
+# function y() {
+# 	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+# 	yazi "$@" --cwd-file="$tmp"
+# 	if cwd="$(command cat -- "$tmp")" && [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+# 		builtin cd -- "$cwd"
+# 	fi
+# 	rm -f -- "$tmp"
+#}
+
 eval "$(zoxide init posix --hook prompt)"
+eval "$(zoxide init bash)"
 
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 alias e='exit && exit'
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

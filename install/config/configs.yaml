@@ -5,8 +5,22 @@ configs:
 - .config/nvim
 - .config/picom
 - .config/rofi
+- .oh-my-zsh
 - .bashrc
 - .fzf.bash
 - .fzf.bash
 - .p10k.zsh
 - .zshrc
+oh_my_sh:
+  install: true
+  theme: custom_theme.sh
+  default_shell: true
+zsh_plugins:
+  - name: zsh-syntax-highlighting
+    install: true
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    source_file: zsh-syntax-highlighting.zsh
+  - name: zsh-autosuggestions
+    install: true
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    source_file: zsh-autosuggestions.zsh
