@@ -1,0 +1,3 @@
+[submodule "/home/anton/dotfiles/.config/awesome/awesome-wm-widgets"]
+	path = /home/anton/dotfiles/.config/awesome/awesome-wm-widgets
+	url = https://github.com/streetturtle/awesome-wm-widgets

@@ -65,7 +65,7 @@ awful.spawn.with_shell("google-chrome --new-window https://outlook.office.com/ma
 -- spawn dotfiles
 -- awful.spawn.with_shell("code --new-window ~/ws/dotfiles")
 -- temp using /.config
-awful.spawn.with_shell("code --new-window ~/.config")
+awful.spawn.with_shell("code --new-window ~/dotfiles")
 awful.spawn.with_shell("code --new-window ~/.config/awesome")
 
 awful.spawn.with_shell("~/.config/awesome/autorun.sh")
@@ -734,7 +734,7 @@ client.connect_signal("property::name", function(c)
         --              text = title })
         if string.find(title, "phd_plan") then
             c:move_to_tag(awful.screen.focused().tags[5])
-        elseif string.find(title, ".config") or string.find(title, "awesome") then
+        elseif string.find(title, ".config") or string.find(title, "awesome") or string.find(title, "dotfiles") then
             c:move_to_tag(awful.screen.focused().tags[8])
         else 
             c.screen = awful.screen.focused()
@@ -748,9 +748,9 @@ client.connect_signal("property::name", function(c)
     if c.name and c.class == "Google-chrome" then
         local title = c.name 
         -- debug title 
-        naughty.notify({ preset = naughty.config.presets.info,
-                     title = "title- debug",
-                     text = title })
+        -- naughty.notify({ preset = naughty.config.presets.info,
+        --              title = "title- debug",
+        --              text = title })
         if string.find(title, "Outlook") then
             c:move_to_tag(awful.screen.focused().tags[3])
         else 
