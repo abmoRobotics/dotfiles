@@ -368,30 +368,40 @@ install_configs() {
     for config in "${CONFIGS[@]}"; do
         echo "Processing configuration: $config"
 
-        SOURCE_DIR="$DOTFILES_DIR/$config"
-        TARGET_DIR="$HOME/$config"
+        SOURCE_PATH="$DOTFILES_DIR/$config"
+        TARGET_PATH="$HOME/$config"
 
-        # Check if source directory exists
-        if [ ! -d "$SOURCE_DIR" ]; then
-            echo "Warning: Source directory $SOURCE_DIR does not exist. Skipping."
+        # Check if source exists
+        if [ ! -e "$SOURCE_PATH" ]; then
+            echo "Warning: Source $SOURCE_PATH does not exist. Skipping."
+            continue
+        fi
+
+        # Determine if the source is a directory or a file
+        if [ -d "$SOURCE_PATH" ]; then
+            TYPE="directory"
+        elif [ -f "$SOURCE_PATH" ]; then
+            TYPE="file"
+        else
+            echo "Warning: Source $SOURCE_PATH is neither a file nor a directory. Skipping."
             continue
         fi
 
         # Backup existing config if it exists
-        if [ -e "$TARGET_DIR" ]; then
+        if [ -e "$TARGET_PATH" ] || [ -L "$TARGET_PATH" ]; then
             BACKUP_DIR="$HOME/.config_backup/$(date +%Y%m%d_%H%M%S)/$config"
-            echo "Backing up existing configuration from $TARGET_DIR to $BACKUP_DIR"
+            echo "Backing up existing $TARGET_PATH to $BACKUP_DIR"
             mkdir -p "$BACKUP_DIR"
-            mv "$TARGET_DIR" "$BACKUP_DIR"
+            mv "$TARGET_PATH" "$BACKUP_DIR"
         fi
 
-        # Create the target directory's parent if it doesn't exist
-        mkdir -p "$(dirname "$TARGET_DIR")"
+        # Ensure parent directory exists
+        mkdir -p "$(dirname "$TARGET_PATH")"
 
         # Create symbolic link
-        ln -s "$SOURCE_DIR" "$TARGET_DIR"
+        ln -s "$SOURCE_PATH" "$TARGET_PATH"
         if [ $? -eq 0 ]; then
-            echo "Symlink created: $TARGET_DIR -> $SOURCE_DIR"
+            echo "Symlink created: $TARGET_PATH -> $SOURCE_PATH"
         else
             echo "Failed to create symlink for $config."
         fi
@@ -399,6 +409,7 @@ install_configs() {
 
     echo "Configuration symlinks installation complete."
 }
+
 
 generate_ssh_key() {
     email=$1
