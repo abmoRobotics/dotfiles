@@ -60,6 +60,8 @@ beautiful.init("~/.config/awesome/theme.lua")
 
 awful.spawn.with_shell("teams-for-linux")
 awful.spawn.with_shell("code --new-window ~/ws/overleaf/phd_plan")
+awful.spawn.with_shell("code --new-window ~/ws/overleaf/survey_paper")
+awful.spawn.with_shell("code --new-window ~/ws/projects/aauspacerobotics")
 awful.spawn.with_shell("google-chrome --new-window https://outlook.office.com/mail/")
 
 -- spawn dotfiles
@@ -590,7 +592,7 @@ awful.rules.rules = {
     -- Floating clients.
     { rule_any = {
         instance = {
-          "DTA",  -- Firefox addon DownThemAll.
+          "DTA",  -- Firefox addon DownThemAll. 
           "copyq",  -- Includes session name in class.
           "pinentry",
         },
@@ -626,9 +628,11 @@ awful.rules.rules = {
       }, properties = { titlebars_enabled = false --[[default = true]] }
     },
 
-    -- Set Firefox to always map on the tag named "2" on screen 1.
+    -- Set Firefox to always map on the tag named "2" on screen 1
     { rule = { class = "teams-for-linux" },
       properties = { screen = 1, tag = "Teams" } },
+    { rule = { class = "Todoist"},
+      properties = { screen = 2, tag = "1" } },
     { rule = { class = "Spotify"},
       properties = { screen = 1, tag = "8" } },
     { rule = { class = "Blueman-manager"},
@@ -734,7 +738,11 @@ client.connect_signal("property::name", function(c)
         --              text = title })
         if string.find(title, "phd_plan") then
             c:move_to_tag(awful.screen.focused().tags[5])
+        elseif string.find(title, "survey_paper") then
+            c:move_to_tag(awful.screen.focused().tags[6])
         elseif string.find(title, ".config") or string.find(title, "awesome") or string.find(title, "dotfiles") then
+            c:move_to_tag(awful.screen.focused().tags[9])
+        elseif string.find(title, "aauspacerobotics") then
             c:move_to_tag(awful.screen.focused().tags[8])
         else 
             c.screen = awful.screen.focused()
