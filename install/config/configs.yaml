@@ -5,3 +5,8 @@ configs:
 - .config/nvim
 - .config/picom
 - .config/rofi
+# - .bashrc
+# - .fzf.bash
+# - .fzf.bash
+# - .p10k.zsh
+# - .zshrc
