@@ -16,6 +16,7 @@ apt_packages:
   - software-properties-common
   - zsh
   - fuse
+  - zotero
 
 pip_packages:
   - torch
