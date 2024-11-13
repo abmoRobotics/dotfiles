@@ -17,6 +17,8 @@ apt_packages:
   - zsh
   - fuse
   - zotero
+  - i3lock-fancy
+  - xautolock
 
 pip_packages:
   - torch
@@ -36,3 +38,4 @@ snap_packages:
   - "spotify"           # Spotify
   - "slack"             # Slack
   - "teams-for-linux"   # Teams
+  - "todoist"           # Todoist
