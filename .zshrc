@@ -123,6 +123,10 @@ source $ZSH/oh-my-zsh.sh
 #     source /opt/ros/humble/setup.zsh
 #     echo "ROS 2 Humble sourced."
 # fi
+
+
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
 # Function to initialize conda
 function c() {
     __conda_setup="$('/home/anton/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
@@ -182,9 +186,117 @@ alias fd='fdfind'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
 # export FZF_DEFAULT_COMMAND='fdfind --type f'
 # export FZF_DEFAULT_OPTS="--layout=reverse --inline-info --height=80%"
 # export FZF_DEFAULT_COMMAND="fd . $HOME"
 # export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
 # export FZF_ALT_C_COMMAND="fd -t d . $HOME"
+
+#typeset -g POWERLEVEL9K_INSTANT_PROMPT=off
+# Custom Zsh startup message for AAU SPACE ROBOTICS
+
+# Colors for styling
+YELLOW="\033[1;33m"
+BLUE="\033[1;34m"
+CYAN="\033[1;36m"
+RESET="\033[0m"
+
+# Function to fetch system details
+fetch_system_info() {
+    # CONDA status
+    CONDA_STATUS="deactivated"
+    
+    # ROS2 Version
+    ROS2_VERSION=$(ros2 --version 2>/dev/null || echo "ROS2 not installed")
+    
+    # Operating System
+    OS_NAME=$(uname -o)
+    
+    # Kernel version
+    KERNEL_VERSION=$(uname -r)
+    
+    # Terminal type
+    TERMINAL_TYPE=$TERM
+    
+    # Terminal font (if set)
+    TERMINAL_FONT=$(fc-match monospace | cut -d: -f1)
+    
+    # CPU Info
+    CPU_MODEL=$(lscpu | grep "Model name:" | sed 's/Model name:\s*//')
+    
+    # GPU Info
+    GPU_MODEL=$(lspci | grep VGA | cut -d: -f3 | head -n 1 || echo "No GPU detected")
+    
+    # Memory info (total)
+    MEMORY_TOTAL=$(free -h | grep "Mem:" | awk '{print $2}')
+}
+#typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
+source /opt/ros/humble/setup.zsh
+
+# Call the function to populate system info variables
+# Function for custom startup message
+custom_startup_message() {
+    # Colors for styling
+    YELLOW="\033[1;33m"
+    BLUE="\033[1;34m"
+    CYAN="\033[1;36m"
+    RESET="\033[0m"
+
+    # Function to fetch system details
+    fetch_system_info() {
+        # CONDA status
+        CONDA_STATUS="deactivated"
+        
+        # ROS2 Version
+        ROS2_VERSION=$(ros2 --version 2>/dev/null || echo "ROS2 not installed")
+        
+        # Operating System
+        OS_NAME=$(uname -o)
+        
+        # Kernel version
+        KERNEL_VERSION=$(uname -r)
+        
+        # Terminal type
+        TERMINAL_TYPE=$TERM
+        
+        # Terminal font (if set)
+        TERMINAL_FONT=$(fc-match monospace | cut -d: -f1)
+        
+        # CPU Info
+        CPU_MODEL=$(lscpu | grep "Model name:" |sed 's/Model name:\s*//')
+        
+        # GPU Info
+        GPU_MODEL=$(lspci | grep VGA | cut -d: -f3 | head -n 1 || echo "No GPU detected")
+        
+        # Memory info (total)
+        MEMORY_TOTAL=$(free -h | grep "Mem:" | awk '{print $2}')
+    }
+
+    # Call the function to populate system info variables
+    fetch_system_info
+
+    # Display custom startup message
+    echo -e "${YELLOW}========================================${RESET}"
+    echo -e "${CYAN}           AAU SPACE ROBOTICS           ${RESET}"
+    echo -e "${CYAN}           AALBORG UNIVERSITY           ${RESET}"
+    echo -e "${CYAN}                 PHD                    ${RESET}"
+    echo -e "${CYAN}        Anton Bjørndahl Mortensen       ${RESET}"
+    echo -e "${YELLOW}========================================${RESET}"
+    echo -e "${BLUE}CONDA Status:        ${RESET}${CONDA_STATUS}"
+    echo -e "${BLUE}ROS2 Version:        ${RESET}${ROS2_VERSION}"
+    echo -e "${YELLOW}----------------------------------------${RESET}"
+    echo -e "${BLUE}Operating System:    ${RESET}${OS_NAME}"
+    echo -e "${BLUE}Kernel Version:      ${RESET}${KERNEL_VERSION}"
+    echo -e "${YELLOW}----------------------------------------${RESET}"
+    echo -e "${BLUE}Terminal:            ${RESET}${TERMINAL_TYPE}"
+    echo -e "${BLUE}Terminal Font:       ${RESET}${TERMINAL_FONT}"
+    echo -e "${YELLOW}----------------------------------------${RESET}"
+    echo -e "${BLUE}CPU Model:           ${RESET}${CPU_MODEL}"
+    echo -e "${BLUE}GPU Model:           ${RESET}${GPU_MODEL}"
+    echo -e "${BLUE}Total Memory:        ${RESET}${MEMORY_TOTAL}"
+    echo -e "${YELLOW}========================================${RESET}"
+}
+
+# Call custom startup message function after prompt setup
+#custom_startup_message
