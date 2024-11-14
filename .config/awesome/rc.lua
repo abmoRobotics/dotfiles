@@ -447,13 +447,15 @@ globalkeys = gears.table.join(
             {description = "rofi menu", group = "launcher"}),
     awful.key({ modkey, "Shift" }, "space",     function () awful.spawn.with_shell("~/.config/rofi/powermenu/type-2/powermenu.sh") end,
             {description = "rofi menu", group = "launcher"}),
-        
+    awful.key({ modkey },            "r",     function () awful.spawn.with_shell("~/.config/rofi/launchers/type-2/launcher.sh") end,
+    {description = "rofi menu", group = "launcher"}),
         
     -- end application keybindings
 
     -- Prompt
-    awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
-              {description = "run prompt", group = "launcher"}),
+    -- awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
+    --           {description = "run prompt", group = "launcher"}),
+    
 
     awful.key({ modkey }, "x",
               function ()
@@ -776,17 +778,3 @@ client.connect_signal("property::name", function(c)
         end
     end
 end)
-
--- same as previous but for .config
--- client.connect_signal("property::name", function(c)
---     if c.name and c.class == "Code" then
---         local title = c.name 
---         -- debug title 
---         if string.find(title, ".config") or string.find(title, "awesome") then
---             c:move_to_tag(awful.screen.focused().tags[8])
---         else 
---             c.screen = awful.screen.focused()
---             c:move_to_tag(awful.screen.focused().selected_tag)
---         end
---     end
--- end)
