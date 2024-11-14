@@ -543,30 +543,51 @@ install_oh_my_zsh() {
         fi
     fi
 
-    # Apply custom theme if specified
-    CUSTOM_THEME=$(yq e '.oh_my_zsh.theme' "$CONFIG_FILE")
+    # Apply theme
+    THEME=$(yq e '.oh_my_zsh.theme' "$CONFIG_FILE")
 
-    if [ -n "$CUSTOM_THEME" ] && [ "$CUSTOM_THEME" != "null" ]; then
-        THEME_SOURCE="$(pwd)/../.config/oh-my-zsh/$CUSTOM_THEME.zsh-theme"
-        THEME_DEST="$HOME/.oh-my-zsh/custom/themes/$CUSTOM_THEME.zsh-theme"
+    if [ -n "$THEME" ] && [ "$THEME" != "null" ]; then
+        if [ "$THEME" = "powerlevel10k" ]; then
+            echo "Installing Powerlevel10k theme..."
+            # Install Powerlevel10k theme
+            git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
 
-        if [ -f "$THEME_SOURCE" ]; then
-            cp "$THEME_SOURCE" "$THEME_DEST"
-            echo "Custom theme '$CUSTOM_THEME' copied to Oh My Zsh themes directory."
+            # Update .zshrc to use Powerlevel10k theme
+            sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" "$HOME/.zshrc"
 
-            # Update Oh My Zsh configuration to use the custom theme
-            sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"$CUSTOM_THEME\"/" "$HOME/.zshrc"
+            # Optionally copy .p10k.zsh configuration file if it exists
+            P10K_CONFIG_SOURCE="$(pwd)/../.config/oh-my-zsh/.p10k.zsh"
+            P10K_CONFIG_DEST="$HOME/.p10k.zsh"
 
-            echo "Oh My Zsh theme set to '$CUSTOM_THEME'."
+            if [ -f "$P10K_CONFIG_SOURCE" ]; then
+                cp "$P10K_CONFIG_SOURCE" "$P10K_CONFIG_DEST"
+                echo "Copied .p10k.zsh configuration file."
+            else
+                echo ".p10k.zsh configuration file not found. Skipping."
+            fi
         else
-            echo "Custom theme source $THEME_SOURCE does not exist. Skipping theme setup."
+            # Handle custom themes
+            THEME_SOURCE="$(pwd)/../.config/oh-my-zsh/$THEME.zsh-theme"
+            THEME_DEST="$HOME/.oh-my-zsh/custom/themes/$THEME.zsh-theme"
+
+            if [ -f "$THEME_SOURCE" ]; then
+                cp "$THEME_SOURCE" "$THEME_DEST"
+                echo "Custom theme '$THEME' copied to Oh My Zsh themes directory."
+
+                # Update Oh My Zsh configuration to use the custom theme
+                sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"$THEME\"/" "$HOME/.zshrc"
+
+                echo "Oh My Zsh theme set to '$THEME'."
+            else
+                echo "Custom theme source $THEME_SOURCE does not exist. Skipping theme setup."
+            fi
         fi
     fi
 
     # Check if default shell should be set to Zsh
     DEFAULT_SHELL=$(yq e '.oh_my_zsh.default_shell' "$CONFIG_FILE")
 
-    if [ -n "$DEFAULT_SHELL" ] && [ "$DEFAULT_SHELL" != "null" ]; then
+    if [ "$DEFAULT_SHELL" = "true" ]; then
         # Set the default shell to Zsh
         chsh -s "$(command -v zsh)"
         echo "Default shell set to Zsh."

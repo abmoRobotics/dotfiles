@@ -13,7 +13,7 @@ configs:
 - .zshrc
 oh_my_zsh:
   install: true
-  theme: custom_theme.sh
+  theme: powerlevel10k
   default_shell: true
 zsh_plugins:
   - name: zsh-syntax-highlighting
