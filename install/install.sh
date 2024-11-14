@@ -532,93 +532,6 @@ install_oh_my_zsh() {
     if [ -d "$HOME/.oh-my-zsh" ]; then
         echo "Oh My Zsh is already installed. Skipping installation."
     else
-        echo "Cloning Oh My Zsh repository..."
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-        if [ $? -eq 0 ]; then
-            echo "Oh My Zsh installed successfully."
-        else
-            echo "Failed to install Oh My Zsh. Please check for errors."
-            return 1
-        fi
-    fi
-
-    # Apply theme
-    THEME=$(yq e '.oh_my_zsh.theme' "$CONFIG_FILE")
-
-    if [ -n "$THEME" ] && [ "$THEME" != "null" ]; then
-        if [ "$THEME" = "powerlevel10k" ]; then
-            echo "Installing Powerlevel10k theme..."
-            # Install Powerlevel10k theme
-            git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
-
-            # Update .zshrc to use Powerlevel10k theme
-            sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" "$HOME/.zshrc"
-
-            # Optionally copy .p10k.zsh configuration file if it exists
-            P10K_CONFIG_SOURCE="$(pwd)/../.config/oh-my-zsh/.p10k.zsh"
-            P10K_CONFIG_DEST="$HOME/.p10k.zsh"
-
-            if [ -f "$P10K_CONFIG_SOURCE" ]; then
-                cp "$P10K_CONFIG_SOURCE" "$P10K_CONFIG_DEST"
-                echo "Copied .p10k.zsh configuration file."
-            else
-                echo ".p10k.zsh configuration file not found. Skipping."
-            fi
-        else
-            # Handle custom themes
-            THEME_SOURCE="$(pwd)/../.config/oh-my-zsh/$THEME.zsh-theme"
-            THEME_DEST="$HOME/.oh-my-zsh/custom/themes/$THEME.zsh-theme"
-
-            if [ -f "$THEME_SOURCE" ]; then
-                cp "$THEME_SOURCE" "$THEME_DEST"
-                echo "Custom theme '$THEME' copied to Oh My Zsh themes directory."
-
-                # Update Oh My Zsh configuration to use the custom theme
-                sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"$THEME\"/" "$HOME/.zshrc"
-
-                echo "Oh My Zsh theme set to '$THEME'."
-            else
-                echo "Custom theme source $THEME_SOURCE does not exist. Skipping theme setup."
-            fi
-        fi
-    fi
-
-    # Check if default shell should be set to Zsh
-    DEFAULT_SHELL=$(yq e '.oh_my_zsh.default_shell' "$CONFIG_FILE")
-
-    if [ "$DEFAULT_SHELL" = "true" ]; then
-        # Set the default shell to Zsh
-        chsh -s "$(command -v zsh)"
-        echo "Default shell set to Zsh."
-    fi
-
-    echo "Oh My Zsh installation and configuration complete."
-}
-
-
-install_oh_my_zsh() {
-    echo "Checking if Oh My Zsh installation is enabled in configs.yaml..."
-
-    CONFIG_FILE="config/configs.yaml"
-    if [ ! -f "$CONFIG_FILE" ]; then
-        echo "Configuration file $CONFIG_FILE not found. Skipping Oh My Zsh installation."
-        return 1
-    fi
-
-    INSTALL_OH_MY_ZSH=$(yq e '.oh_my_zsh.install' "$CONFIG_FILE")
-
-    if [[ "$INSTALL_OH_MY_ZSH" != "true" ]]; then
-        echo "Oh My Zsh installation is disabled in configs.yaml. Skipping."
-        return 0
-    fi
-
-    echo "Installing Oh My Zsh..."
-
-    # Check if Oh My Zsh is already installed
-    if [ -d "$HOME/.oh-my-zsh" ]; then
-        echo "Oh My Zsh is already installed. Skipping installation."
-    else
         echo "Cloning Oh My Zsh repository into $HOME/.oh-my-zsh..."
         git clone https://github.com/ohmyzsh/ohmyzsh.git "$HOME/.oh-my-zsh"
 
@@ -645,19 +558,19 @@ install_oh_my_zsh() {
             git clone --depth=1 https://github.com/romkatv/powerlevel10k.git \
                 "$HOME/.oh-my-zsh/custom/themes/powerlevel10k"
 
-            # Update .zshrc to use Powerlevel10k theme
-            sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" "$HOME/.zshrc"
+            # # Update .zshrc to use Powerlevel10k theme
+            # sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"powerlevel10k\/powerlevel10k\"/" "$HOME/.zshrc"
 
             # Optionally copy .p10k.zsh configuration file if it exists
-            P10K_CONFIG_SOURCE="$(pwd)/../.config/oh-my-zsh/.p10k.zsh"
-            P10K_CONFIG_DEST="$HOME/.p10k.zsh"
+            # P10K_CONFIG_SOURCE="$(pwd)/../.config/oh-my-zsh/.p10k.zsh"
+            # P10K_CONFIG_DEST="$HOME/.p10k.zsh"
 
-            if [ -f "$P10K_CONFIG_SOURCE" ]; then
-                cp "$P10K_CONFIG_SOURCE" "$P10K_CONFIG_DEST"
-                echo "Copied .p10k.zsh configuration file."
-            else
-                echo ".p10k.zsh configuration file not found. Skipping."
-            fi
+            # if [ -f "$P10K_CONFIG_SOURCE" ]; then
+            #     cp "$P10K_CONFIG_SOURCE" "$P10K_CONFIG_DEST"
+            #     echo "Copied .p10k.zsh configuration file."
+            # else
+            #     echo ".p10k.zsh configuration file not found. Skipping."
+            # fi
         else
             # Handle custom themes
             THEME_SOURCE="$(pwd)/../.config/oh-my-zsh/$THEME.zsh-theme"
@@ -692,6 +605,56 @@ install_oh_my_zsh() {
     fi
 
     echo "Oh My Zsh installation and configuration complete."
+}
+
+
+
+install_zsh_plugins() {
+    echo "Installing Zsh plugins based on configs.yaml..."
+
+    CONFIG_FILE="config/configs.yaml"
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Configuration file $CONFIG_FILE not found. Skipping Zsh plugins installation."
+        return 1
+    fi
+
+    # Read the list of Zsh plugins from configs.yaml
+    plugin_count=$(yq e '.zsh_plugins | length' "$CONFIG_FILE")
+
+    if [ "$plugin_count" -eq 0 ]; then
+        echo "No Zsh plugins specified in configs.yaml. Skipping."
+        return 0
+    fi
+
+    ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+    mkdir -p "$ZSH_CUSTOM/plugins"
+
+    for i in $(seq 0 $(($plugin_count - 1))); do
+        plugin_name=$(yq e ".zsh_plugins[$i].name" "$CONFIG_FILE")
+        install_plugin=$(yq e ".zsh_plugins[$i].install" "$CONFIG_FILE")
+        plugin_repo=$(yq e ".zsh_plugins[$i].repo" "$CONFIG_FILE")
+
+        if [[ "$install_plugin" != "true" ]]; then
+            echo "Skipping plugin $plugin_name as per configs.yaml."
+            continue
+        fi
+
+        plugin_dir="$ZSH_CUSTOM/plugins/$plugin_name"
+
+        if [ -d "$plugin_dir" ]; then
+            echo "Plugin $plugin_name is already installed. Skipping."
+        else
+            echo "Installing plugin $plugin_name..."
+            git clone "$plugin_repo" "$plugin_dir"
+            if [ $? -eq 0 ]; then
+                echo "Plugin $plugin_name installed successfully."
+            else
+                echo "Failed to install plugin $plugin_name."
+            fi
+        fi
+    done
+
+    echo "Zsh plugins installation based on configs.yaml completed."
 }
 
 generate_ssh_key() {
