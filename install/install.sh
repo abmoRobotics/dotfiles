@@ -614,7 +614,7 @@ install_zsh_plugins() {
         return 0
     fi
 
-    ZSH_CUSTOM="$HOME/.oh-my-sh/custom/plugins"
+    ZSH_CUSTOM="$HOME/.oh-my-zsh/custom/plugins"
     mkdir -p "$ZSH_CUSTOM/plugins"
 
     for i in $(seq 0 $(($plugin_count - 1))); do
