@@ -3,7 +3,7 @@ apt_packages:
   - kitty
   - rofi
   - curl
-  - tailscale
+  - tailscale   # NOT WORKING
   - tmux
   - net-tools
   - htop
@@ -16,7 +16,7 @@ apt_packages:
   - software-properties-common
   - zsh
   - fuse
-  - zotero
+  - zotero        # NOT WORKING
   - i3lock-fancy
   - xautolock
   - fd-find
