@@ -11,6 +11,11 @@ local themes_path = gfs.get_themes_dir()
 
 local theme = {}
 
+-- ### Custom by me
+theme.tasklist_disable_task_name = true
+
+
+
 -- theme.font          = "sans 8"
 theme.font          = "SauceCodePro Nerd Font Mono Regular 12"
 
@@ -25,6 +30,7 @@ theme.bg_focus     = "#4FC3F7"
 theme.bg_urgent    = "#ff0000"
 theme.bg_minimize  = "#40474A"
 theme.bg_systray   = theme.bg_normal
+
 
 -- theme.fg_normal     = "#aaaaaa"
 -- theme.fg_focus      = "#ffffff"
@@ -41,12 +47,16 @@ theme.fg_minimize  = "#9AABB3"
 -- theme.border_normal = "#000000"
 -- theme.border_focus  = "#535d6c"
 -- theme.border_marked = "#91231c"
-theme.useless_gap  = 8
-theme.border_width = 4
-theme.border_normal = "#1a1a1a"
-theme.border_focus  = "#4FC3F7"
-theme.border_marked = "#4FC3F7"
-
+theme.useless_gap  = 0
+theme.border_width = 4 
+theme.border_normal = "#1a1a1a" 
+theme.border_focus  = "#E67300" --"#4FC3F7"
+theme.border_marked = "#E67300" --"#4FC3F7"  
+-- theme.titlebar_fg_focus = "#FF5733"
+theme.taglist_bg_focus = "#FF5733"
+theme.tasklist_bg_focus = "#FF573360"
+theme.taglist_bg_urgent = "#FFD70030" -- Change this to your desired color, e.g., a shade of yellow
+theme.taglist_fg_urgent = "#FFFFFF" -- Change this to your preferred foreground color (black text, for example)
 -- There are other variable sets
 -- overriding the default one when
 -- defined, the sets are:
