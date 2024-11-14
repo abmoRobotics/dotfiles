@@ -11,7 +11,7 @@ configs:
 - .fzf.bash
 - .p10k.zsh
 - .zshrc
-oh_my_sh:
+oh_my_zsh:
   install: true
   theme: custom_theme.sh
   default_shell: true

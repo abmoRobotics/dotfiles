@@ -202,13 +202,13 @@ install_main(){
 
     install_configs
         # Install Oh My Sh
-    install_oh_my_sh
+    install_oh_my_zsh
 
     # Read whether Oh My Sh is installed
     CONFIG_FILE="config/configs.yaml"
-    INSTALL_OH_MY_SH=$(yq e '.oh_my_sh.install' "$CONFIG_FILE")
+    INSTALL_OH_MY_ZSH=$(yq e '.oh_my_zsh.install' "$CONFIG_FILE")
 
-    if [[ "$INSTALL_OH_MY_SH" == "true" ]]; then
+    if [[ "$INSTALL_OH_MY_ZSH" == "true" ]]; then
         # Install Zsh Plugins based on configs.yaml
         install_zsh_plugins
 
@@ -510,71 +510,71 @@ install_configs() {
     echo "Configuration symlinks installation complete."
 }
 
-install_oh_my_sh() {
-    echo "Checking if Oh My Sh installation is enabled in configs.yaml..."
+install_oh_my_zsh() {
+    echo "Checking if Oh My Zsh installation is enabled in configs.yaml..."
 
     CONFIG_FILE="config/configs.yaml"
     if [ ! -f "$CONFIG_FILE" ]; then
-        echo "Configuration file $CONFIG_FILE not found. Skipping Oh My Sh installation."
+        echo "Configuration file $CONFIG_FILE not found. Skipping Oh My Zsh installation."
         return 1
     fi
 
-    INSTALL_OH_MY_SH=$(yq e '.oh_my_sh.install' "$CONFIG_FILE")
+    INSTALL_OH_MY_ZSH=$(yq e '.oh_my_zsh.install' "$CONFIG_FILE")
 
-    if [[ "$INSTALL_OH_MY_SH" != "true" ]]; then
-        echo "Oh My Sh installation is disabled in configs.yaml. Skipping."
+    if [[ "$INSTALL_OH_MY_ZSH" != "true" ]]; then
+        echo "Oh My Zsh installation is disabled in configs.yaml. Skipping."
         return 0
     fi
 
-    echo "Installing Oh My Sh..."
+    echo "Installing Oh My Zsh..."
 
-    # Check if Oh My Sh is already installed
-    if [ -d "$HOME/.oh-my-sh" ]; then
-        echo "Oh My Sh is already installed. Skipping installation."
+    # Check if Oh My Zsh is already installed
+    if [ -d "$HOME/.oh-my-zsh" ]; then
+        echo "Oh My Zsh is already installed. Skipping installation."
     else
-        echo "Cloning Oh My Sh repository..."
-        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmysh/oh-my-sh/master/tools/install.sh)"
+        echo "Cloning Oh My Zsh repository..."
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
         if [ $? -eq 0 ]; then
-            echo "Oh My Sh installed successfully."
+            echo "Oh My Zsh installed successfully."
         else
-            echo "Failed to install Oh My Sh. Please check for errors."
+            echo "Failed to install Oh My Zsh. Please check for errors."
             return 1
         fi
     fi
 
     # Apply custom theme if specified
-    CUSTOM_THEME=$(yq e '.oh_my_sh.theme' "$CONFIG_FILE")
+    CUSTOM_THEME=$(yq e '.oh_my_zsh.theme' "$CONFIG_FILE")
 
     if [ -n "$CUSTOM_THEME" ] && [ "$CUSTOM_THEME" != "null" ]; then
-        THEME_SOURCE="$(pwd)/../.config/oh-my-sh/$CUSTOM_THEME"
-        THEME_DEST="$HOME/.oh-my-sh/themes/$CUSTOM_THEME"
+        THEME_SOURCE="$(pwd)/../.config/oh-my-zsh/$CUSTOM_THEME.zsh-theme"
+        THEME_DEST="$HOME/.oh-my-zsh/custom/themes/$CUSTOM_THEME.zsh-theme"
 
         if [ -f "$THEME_SOURCE" ]; then
             cp "$THEME_SOURCE" "$THEME_DEST"
-            echo "Custom theme '$CUSTOM_THEME' copied to Oh My Sh themes directory."
+            echo "Custom theme '$CUSTOM_THEME' copied to Oh My Zsh themes directory."
 
-            # Update Oh My Sh configuration to use the custom theme
-            sed -i "s/^export OSH_THEME=.*/export OSH_THEME=\"$CUSTOM_THEME\"/" "$HOME/.zshrc"
+            # Update Oh My Zsh configuration to use the custom theme
+            sed -i "s/^ZSH_THEME=.*/ZSH_THEME=\"$CUSTOM_THEME\"/" "$HOME/.zshrc"
 
-            echo "Oh My Sh theme set to '$CUSTOM_THEME'."
+            echo "Oh My Zsh theme set to '$CUSTOM_THEME'."
         else
             echo "Custom theme source $THEME_SOURCE does not exist. Skipping theme setup."
         fi
     fi
 
-    # Check if default in config
-    DEFAULT_SHELL=$(yq e '.oh_my_sh.default_shell' "$CONFIG_FILE")
+    # Check if default shell should be set to Zsh
+    DEFAULT_SHELL=$(yq e '.oh_my_zsh.default_shell' "$CONFIG_FILE")
 
     if [ -n "$DEFAULT_SHELL" ] && [ "$DEFAULT_SHELL" != "null" ]; then
-        # Set the default shell to Oh My Sh
+        # Set the default shell to Zsh
         chsh -s "$(command -v zsh)"
-        echo "Default shell set to Oh My Sh."
+        echo "Default shell set to Zsh."
     fi
-    
 
-    echo "Oh My Sh installation and configuration complete."
+    echo "Oh My Zsh installation and configuration complete."
 }
+
 
 install_zsh_plugins() {
     echo "Installing Zsh plugins based on configs.yaml..."
