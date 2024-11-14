@@ -152,7 +152,7 @@ local label_color = "#d791a8"
 local info_color = "#ffffff"
 
 -- Create the data widget
-local date_widget = wibox.widget.textclock("<span foreground='" .. label_color .. "'> <b> %a %b %-d</b></span>", 60)
+local date_widget = wibox.widget.textclock("<span foreground='" .. label_color .. "'> <b> %a %b %-d</b>  </span>", 60)
 
 -- Create the time widget
 local time_widget = wibox.widget.textclock("<span foreground='" .. info_color .. "'><b>%l:%M %p </b></span>", 1)
@@ -169,9 +169,11 @@ local date_time_widget = wibox.widget {
 -- Function to get kernel version
 local function get_kernel_version(callback)
     awful.spawn.easy_async_with_shell("uname -r", function(stdout)
-        callback(stdout)
+        local kernel = stdout:gsub("%s+", "") -- Remove any extra whitespace or newlines
+        callback(kernel)
     end)
 end
+
 
 -- Create and update the kernel widget
 local kernel_widget = wibox.widget.textbox()
@@ -281,12 +283,19 @@ awful.screen.connect_for_each_screen(function(s)
     s.mytasklist = awful.widget.tasklist {
         screen  = s,
         filter  = awful.widget.tasklist.filter.currenttags,
-        buttons = tasklist_buttons
+        buttons = tasklist_buttons,
+        style = {
+            tasklist_disable_task_name = true, -- Hide task titles
+        },
+        layout = {
+            spacing = 10,
+            layout  = wibox.layout.fixed.horizontal,
+        },
     }
 
     -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s,height = 40 })
-
+    s.mywibox = awful.wibar({ position = "bottom", screen = s,height = 40 })
+    local centered_tasklist = wibox.container.place(s.mytasklist, "center", "center")
     -- Add widgets to the wibox
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
@@ -298,7 +307,7 @@ awful.screen.connect_for_each_screen(function(s)
             wibox.widget.systray(),
         },
         
-        s.mytasklist, -- Middle widget
+        centered_tasklist, -- Middle widget
         { -- Right widgets
         
             layout = wibox.layout.fixed.horizontal,
