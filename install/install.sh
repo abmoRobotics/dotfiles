@@ -27,7 +27,7 @@ install_yq() {
     fi
 }
 
-install_github() {
+install_git() {
     # Check if Git is installed
     if command -v git >/dev/null 2>&1; then
         echo "Git is already installed."
@@ -328,6 +328,7 @@ install_latex() {
 
 # Function to clone repositories based on config/repositories.yaml
 clone_repos() {
+    install_yq
     CONFIG_FILE="config/repositories.yaml"
 
     if [ ! -f "$CONFIG_FILE" ]; then
