@@ -177,10 +177,12 @@ function rb() {
 #     rm -f -- "$tmp"
 # }
 
+
+
 eval "$(zoxide init posix --hook prompt)"
 eval "$(zoxide init zsh)"
 
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 alias e='exit && exit'
 alias fd='fdfind'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
