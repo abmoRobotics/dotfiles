@@ -21,6 +21,7 @@ apt_packages:
   - xautolock
   - fd-find
   - nvtop
+  - smb-client
 
 pip_packages:
   - torch
