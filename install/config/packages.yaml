@@ -43,3 +43,9 @@ snap_packages:
   - "slack"             # Slack
   - "teams-for-linux"   # Teams
   - "todoist"           # Todoist
+
+flatpak_packages:
+  - com.bambulab.BambuStudio  # Remember to install the flathub repository first
+
+apt-ppa-repositories:
+  - ppa:papirus/papirus
