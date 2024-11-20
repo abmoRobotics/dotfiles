@@ -23,6 +23,8 @@ apt_packages:
   - nvtop
   - smb-client
   - flatpak
+  - papirus-icon-theme
+  - samba
 
 pip_packages:
   - torch

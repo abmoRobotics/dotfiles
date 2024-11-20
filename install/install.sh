@@ -18,6 +18,18 @@ is_snap_installed() {
     snap list "$package" &> /dev/null
 }
 
+# Function to check if flatpak is installed
+is_flatpak_installed() {
+    command -v flatpak >/dev/null 2>&1
+}
+
+# Function to check if a PPA is already added
+is_ppa_added() {
+    local ppa_name=$(echo "$1" | cut -d':' -f2-)
+    local ppa_escaped=${ppa_name//\//\\/} # Escape slashes for grep
+    grep -q "^deb .*${ppa_escaped}" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null
+}
+
 install_yq() {
     if command -v yq >/dev/null 2>&1; then
         echo "yq is already installed."
@@ -25,6 +37,40 @@ install_yq() {
         echo "Installing yq..."
         sudo snap install yq
     fi
+}
+
+add_ppa_repositories() {
+    echo "Adding required PPA repositories..."
+
+    # Read the list of required PPA repositories from packages.yaml
+    if [ -f config/packages.yaml ]; then
+        REQUIRED_PPA_REPOSITORIES=($(yq e '.apt-ppa-repositories[]' config/packages.yaml))
+    else
+        echo "Error: packages.yaml not found."
+        exit 1
+    fi
+
+    for ppa in "${REQUIRED_PPA_REPOSITORIES[@]}"; do
+        if [[ -z "$ppa" ]]; then
+            echo "Skipping empty PPA entry."
+            continue
+        fi
+
+        if is_ppa_added "$ppa"; then
+            echo "PPA '$ppa' is already added. Skipping."
+        else
+            echo "Adding PPA '$ppa'..."
+            sudo add-apt-repository -y "$ppa"
+            if [ $? -eq 0 ]; then
+                echo "Successfully added PPA '$ppa'."
+            else
+                echo "Failed to add PPA '$ppa'. Please check for errors."
+            fi
+        fi
+    done
+
+    # Update package lists after adding PPAs
+    sudo apt update
 }
 
 install_git() {
@@ -96,15 +142,46 @@ install_main(){
         sudo apt install -y python3-pip
     fi
 
-	# ----------------------------
-	# Prepare Installation
-	# ----------------------------
+    # ----------------------------
+    # Flatpak Installation and Setup
+    # ----------------------------
+
+    # Check if flatpak is installed
+    if is_flatpak_installed; then
+        echo "Flatpak is already installed."
+    else
+        echo "Flatpak is not installed. Installing Flatpak..."
+        sudo apt update
+        sudo apt install -y flatpak
+        if [ $? -eq 0 ]; then
+            echo "Successfully installed Flatpak."
+            # Add Flathub repository
+            echo "Adding Flathub repository..."
+            sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        else
+            echo "Failed to install Flatpak. Please check for errors."
+            exit 1
+        fi
+    fi
+
+    echo "Starting main installation..."
+    
+    # ----------------------------
+    # Prepare Installation
+    # ----------------------------
     install_yq
 
-    # Update and upgrade system packages
-    echo "Updating and upgrading system packages..."
-    sudo apt update && sudo apt upgrade -y
+    # ----------------------------
+    # Add PPA Repositories
+    # ----------------------------
+    echo "Adding PPA repositories..."
+    add_ppa_repositories
 
+    # ----------------------------
+    # Update system package cache and upgrade
+    # ----------------------------
+    echo "Updating package lists and upgrading system packages..."
+    sudo apt update && sudo apt upgrade -y
 	# ----------------------------
 	# Find packages 
 	# ----------------------------
@@ -138,6 +215,15 @@ install_main(){
             fi
             REQUIRED_SNAP_PACKAGES+=("$line")
         done
+    else
+        echo "Error: packages.yaml not found."
+        exit 1
+    fi
+
+
+    # Read the list of required flatpak packages from packages.yaml
+    if [ -f config/packages.yaml ]; then
+        REQUIRED_FLATPAK_PACKAGES=($(yq e '.flatpak_packages[]' config/packages.yaml))
     else
         echo "Error: packages.yaml not found."
         exit 1
@@ -196,6 +282,22 @@ install_main(){
                 echo "Successfully installed Snap package '$PACKAGE_NAME'."
             else
                 echo "Failed to install Snap package '$PACKAGE_NAME'. Please check for errors."
+            fi
+        fi
+    done
+
+    # Install required Flatpak packages
+    echo "Installing required Flatpak packages..."
+    for package in "${REQUIRED_FLATPAK_PACKAGES[@]}"; do
+        if is_flatpak_package_installed "$package"; then
+            echo "Flatpak package '$package' is already installed. Skipping."
+        else
+            echo "Installing Flatpak package '$package'..."
+            flatpak install -y flathub "$package"
+            if [ $? -eq 0 ]; then
+                echo "Successfully installed Flatpak package '$package'."
+            else
+                echo "Failed to install Flatpak package '$package'. Please check for errors."
             fi
         fi
     done
