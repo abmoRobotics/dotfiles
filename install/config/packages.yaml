@@ -38,6 +38,8 @@ pip_packages:
   - h5py
   - requests
   - rich
+  - pyzotero
+  - todoist-api-python
 
 snap_packages:
   - "code --classic"    # Visual Studio Code
