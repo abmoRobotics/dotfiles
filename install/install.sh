@@ -388,6 +388,9 @@ install_ros2() {
     # Install ROS2 Humble Desktop
     sudo apt install ros-humble-desktop -y
 
+    # Install Gazebo Fortress
+    sudo apt-get install ros-humble-ros-gz
+
     # Source ROS2 setup script
     echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
     source ~/.bashrc
