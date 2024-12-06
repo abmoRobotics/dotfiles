@@ -180,3 +180,4 @@ eval "$(zoxide init bash)"
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 alias e='exit && exit'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+source /opt/ros/humble/setup.bash

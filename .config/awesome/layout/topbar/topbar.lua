@@ -4,14 +4,15 @@ local awful = require("awful")
 local wibox = require("wibox")
 local beautiful = require("beautiful")
 local dpi = beautiful.xresources.apply_dpi
-
+v
 -- Custom Local Library: Common Functional Decoration
 local deco = {
 	-- wallpaper = require("deco.wallpaper"),
 	taglist = require("deco.taglist"),
 	tasklist = require("deco.tasklist"),
 }
-
+-- local battery_widget = require("deco.battery")
+-- local battery_widget = 
 local taglist_buttons = deco.taglist()
 local tasklist_buttons = deco.tasklist()
 local color = require("layout.topbar.colors")

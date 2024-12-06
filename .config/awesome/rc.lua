@@ -8,11 +8,12 @@ local awful = require("awful")
 require("awful.autofocus")
 -- Widget and layout library
 local wibox = require("wibox")
-local vicious = require("vicious")
+local vicious = require("vicious") 
 local spotify_widget = require("awesome-wm-widgets.spotify-widget.spotify")
 local todo_widget = require("awesome-wm-widgets.todo-widget.todo")
 local logout_menu_widget = require("awesome-wm-widgets.logout-menu-widget.logout-menu")
 local docker_widget = require("awesome-wm-widgets.docker-widget.docker")
+local battery_widget = require("awesome-wm-widgets.battery-widget.battery")
 -- Theme handling library
 local beautiful = require("beautiful")
 -- Notification library
@@ -281,8 +282,8 @@ awful.screen.connect_for_each_screen(function(s)
                 play_icon = '/usr/share/icons/Papirus-Light/24x24/categories/spotify.svg',
                 pause_icon = '/usr/share/icons/Papirus-Dark/24x24/panel/spotify-indicator.svg',
                 dim_when_paused = true,
-                show_tooltip = false,
-                max_length = -1,
+                show_tooltip = false,  
+                max_length = -1, 
              }),
              todo_widget(),
              docker_widget{
@@ -290,11 +291,18 @@ awful.screen.connect_for_each_screen(function(s)
             },
             -- wibox.widget.systray(),
             -- mytextclock,
+            -- minimum code for battery widget
+
             cpu_widget,
             mem_widget,
             kernel_widget,
             date_time_widget,
             -- s.mylayoutbox,
+            battery_widget({
+                show_current_level = true,
+                display_notification = true,
+
+        }),
             logout_menu_widget{
                 font = 'Play 14',
                 onlock = function() awful.spawn.with_shell('i3lock-fancy') end

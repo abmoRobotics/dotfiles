@@ -25,6 +25,7 @@ apt_packages:
   - flatpak
   - papirus-icon-theme
   - samba
+  - acpi
 
 pip_packages:
   - torch
