@@ -219,9 +219,20 @@ local tasklist_buttons = deco.tasklist()
 awful.screen.connect_for_each_screen(function(s)
     -- Wallpaper
     set_wallpaper(s)
+    -- Determine orientation
+    local is_portrait = s.geometry.height > s.geometry.width
+
+    -- Use vertical layout for portrait mode, and default to tile for landscape
+    local chosen_layout
+    if is_portrait then
+        chosen_layout = awful.layout.layouts[6] -- Assuming `vertical_layout` is the 5th entry
+    else
+        chosen_layout = awful.layout.layouts[1] -- Assuming `tile` is the 1st entry
+    end
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "Teams", "Coding", "PhD", "Survey", "WS7", "WS8", "Settings" }, s, awful.layout.layouts[1])
+    -- awful.tag({ "1", "2", "Teams", "Coding", "PhD", "Survey", "WS7", "WS8", "Settings" }, s, awful.layout.layouts[1])
+    awful.tag({ "1", "2", "Teams", "Coding", "PhD", "Survey", "WS7", "WS8", "Settings" }, s, chosen_layout)
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()

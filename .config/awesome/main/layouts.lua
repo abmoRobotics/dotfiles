@@ -1,6 +1,7 @@
 -- Standard awesome library
 local awful = require("awful")
 local vertical_layout = require("layout.vertical")
+local horizontal_layout = require("layout.horizontal")
 local _M = {}
 
 -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -19,6 +20,7 @@ function _M.get()
         -- awful.layout.suit.fair.horizontal,
         awful.layout.suit.spiral,
         vertical_layout,
+        horizontal_layout,
         -- awful.layout.suit.spiral.dwindle,
         -- awful.layout.suit.max,
         -- awful.layout.suit.max.fullscreen,
