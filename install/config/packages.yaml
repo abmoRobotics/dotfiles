@@ -27,6 +27,8 @@ apt_packages:
   - samba
   - acpi
   - autorandr
+  - flameshot
+  - gpick
 
 pip_packages:
   - torch
