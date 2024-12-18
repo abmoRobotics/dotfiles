@@ -303,6 +303,7 @@ install_main(){
     done
 
     install_configs
+    install_arc_icons
         # Install Oh My Sh
     install_oh_my_zsh
 
@@ -614,6 +615,51 @@ install_configs() {
 
     echo "Configuration symlinks installation complete."
 }
+
+install_arc_icons() {
+    # Define the repository URL and target directory
+    REPO_URL="https://github.com/horst3180/arc-icon-theme.git"
+    TARGET_DIR="/usr/share/icons/Arc"
+
+    # Check if the Arc folder already exists
+    if [ -d "$TARGET_DIR" ]; then
+        echo "The Arc icon theme is already installed at $TARGET_DIR."
+        return
+    fi
+
+    # Create a temporary directory for cloning the repository
+    TMP_DIR=$(mktemp -d)
+    echo "Cloning the repository to temporary directory: $TMP_DIR"
+
+    # Clone the repository
+    git clone "$REPO_URL" "$TMP_DIR" || {
+        echo "Failed to clone the repository."
+        return 1
+    }
+
+    # Check if the Arc folder exists in the cloned repository
+    if [ ! -d "$TMP_DIR/Arc" ]; then
+        echo "The Arc folder was not found in the cloned repository."
+        rm -rf "$TMP_DIR"
+        return 1
+    fi
+
+    # Copy the Arc folder to /usr/share/icons
+    echo "Copying the Arc folder to $TARGET_DIR..."
+    sudo cp -r "$TMP_DIR/Arc" /usr/share/icons || {
+        echo "Failed to copy the Arc folder to $TARGET_DIR."
+        rm -rf "$TMP_DIR"
+        return 1
+    }
+
+    # Clean up the temporary directory
+    echo "Cleaning up..."
+    rm -rf "$TMP_DIR"
+
+    echo "The Arc icon theme has been installed successfully."
+}
+
+
 
 install_oh_my_zsh() {
     echo "Checking if Oh My Zsh installation is enabled in configs.yaml..."
