@@ -15,6 +15,7 @@ local logout_menu_widget = require("awesome-wm-widgets.logout-menu-widget.logout
 local docker_widget = require("awesome-wm-widgets.docker-widget.docker")
 local volume_widget = require('awesome-wm-widgets.volume-widget.volume')
 local battery_widget = require("awesome-wm-widgets.battery-widget.battery")
+local brightness_widget = require("awesome-wm-widgets.brightness-widget.brightness")
 -- Theme handling library
 local beautiful = require("beautiful")
 -- Notification library
@@ -233,7 +234,7 @@ awful.screen.connect_for_each_screen(function(s)
 
     -- Each screen has its own tag table.
     -- awful.tag({ "1", "2", "Teams", "Coding", "PhD", "Survey", "WS7", "WS8", "Settings" }, s, awful.layout.layouts[1])
-    awful.tag({ "1", "2", "Teams", "Coding", "PhD", "Survey", "WS7", "WS8", "Settings" }, s, chosen_layout)
+    awful.tag({ "1", "2", "Teams", "Coding", "PhD", "ISpaRo", "WS7", "WS8", "Settings" }, s, chosen_layout)
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt()
@@ -310,6 +311,9 @@ awful.screen.connect_for_each_screen(function(s)
             kernel_widget,
             date_time_widget,
             -- s.mylayoutbox,
+            brightness_widget{
+                program = 'xbacklight',      
+            },
             battery_widget({
                 show_current_level = true,
                 display_notification = true,

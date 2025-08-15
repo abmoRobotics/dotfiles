@@ -27,3 +27,6 @@ repositories:
     destination: "~/ws/overleaf"
     folder_name: "phd_plan"
 
+  - url: "https://git@git.overleaf.com/6847ecf5ebf7d67be830fa7e"
+    destination: "~/ws/overleaf"
+    folder_name: "isparo_paper_2025"

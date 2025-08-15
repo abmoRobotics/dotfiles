@@ -29,6 +29,9 @@ apt_packages:
   - autorandr
   - flameshot
   - gpick
+  - xbacklight
+  - netdiscover
+  - gvfs-backends
 
 pip_packages:
   - torch

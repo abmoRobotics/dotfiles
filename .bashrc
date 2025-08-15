@@ -125,8 +125,10 @@ function c() {
     else
         if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
             . "/home/anton/anaconda3/etc/profile.d/conda.sh"
+            export TERMINFO=/usr/share/terminfo
         else
             export PATH="/home/anton/anaconda3/bin:$PATH"
+            export TERMINFO=/usr/share/terminfo
         fi
     fi
     unset __conda_setup
@@ -181,3 +183,6 @@ eval "$(zoxide init bash)"
 alias e='exit && exit'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 source /opt/ros/humble/setup.bash
+export PATH=~/usdview/scripts/:$PATH
+eval $(keychain --eval --quiet id_ed25519)
+# export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"

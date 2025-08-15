@@ -75,10 +75,14 @@ client.connect_signal("property::name", function(c)
             c:move_to_tag(awful.screen.focused().tags[5])
         elseif string.find(title, "survey_paper") then
             c:move_to_tag(awful.screen.focused().tags[6])
-        elseif string.find(title, ".config") or string.find(title, "awesome") or string.find(title, "dotfiles") then
-            c:move_to_tag(awful.screen.focused().tags[9])
-        elseif string.find(title, "aauspacerobotics") then
-            c:move_to_tag(awful.screen.focused().tags[8])
+        elseif string.find(title, "isparo_paper_2025") then
+            c:move_to_tag(awful.screen.focused().tags[6])
+        -- elseif string.find(title, ".config") or string.find(title, "awesome") or string.find(title, "dotfiles") then
+        --     c:move_to_tag(awful.screen.focused().tags[9])
+        -- elseif string.find(title, "aauspacerobotics") then
+        --     c:move_to_tag(awful.screen.focused().tags[8])
+        -- elseif string.find(title, "writing_and_reviewing_scientific_papers") then
+        --     c:move_to_tag(awful.screen.focused().tags[7])
         else 
             c.screen = awful.screen.focused()
             c:move_to_tag(awful.screen.focused().selected_tag)
