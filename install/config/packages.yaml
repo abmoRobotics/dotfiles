@@ -32,6 +32,8 @@ apt_packages:
   - xbacklight
   - netdiscover
   - gvfs-backends
+  - nodejs
+  - npm
 
 pip_packages:
   - torch
