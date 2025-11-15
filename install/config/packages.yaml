@@ -35,6 +35,9 @@ apt_packages:
   - nodejs
   - npm
   - keychain
+  - nautilus
+  - pipx
+  - python3-colcon-common-extensions
 
 pip_packages:
   - torch
