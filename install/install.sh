@@ -39,6 +39,23 @@ install_yq() {
     fi
 }
 
+install_chrome() {
+    # Check if Google Chrome is installed
+    if is_apt_installed "google-chrome-stable"; then
+        echo "Google Chrome is already installed."
+    else
+        echo "Installing Google Chrome..."
+        # Download and install Google signing key into keyring (apt-key is deprecated)
+        wget -q -O- https://dl.google.com/linux/linux_signing_key.pub | \
+            gpg --dearmor | sudo tee /usr/share/keyrings/google-linux-signing-keyring.gpg >/dev/null
+        # Add Google Chrome repository using the keyring
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-linux-signing-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | \
+            sudo tee /etc/apt/sources.list.d/google-chrome.list >/dev/null
+        sudo apt update
+        sudo apt install -y google-chrome-stable
+    fi
+}
+
 add_ppa_repositories() {
     echo "Adding required PPA repositories..."
 
@@ -109,6 +126,10 @@ install_git() {
 
 install_main(){
     echo "Starting main installation..."
+    # ----------------------------
+    # First install chrome
+    install_chrome
+
 	# ----------------------------
 	# Snap Installation and Setup
 	# ----------------------------
