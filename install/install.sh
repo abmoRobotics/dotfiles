@@ -18,6 +18,28 @@ is_snap_installed() {
     snap list "$package" &> /dev/null
 }
 
+# Ensure global Python virtual environment exists and is active
+ensure_global_venv() {
+    GLOBAL_VENV="$HOME/.global-venv"
+
+    if command -v python3 >/dev/null 2>&1; then
+        if [ ! -d "$GLOBAL_VENV" ]; then
+            echo "Creating global Python virtual environment at $GLOBAL_VENV..."
+            python3 -m venv "$GLOBAL_VENV"
+        fi
+
+        if [ -f "$GLOBAL_VENV/bin/activate" ]; then
+            # shellcheck disable=SC1090
+            . "$GLOBAL_VENV/bin/activate"
+            echo "Activated global Python virtual environment ($GLOBAL_VENV)."
+        else
+            echo "Warning: Could not find activate script in $GLOBAL_VENV/bin/activate."
+        fi
+    else
+        echo "Warning: python3 not found; cannot create global virtual environment."
+    fi
+}
+
 # Function to check if flatpak is installed
 is_flatpak_installed() {
     command -v flatpak >/dev/null 2>&1
@@ -54,6 +76,38 @@ install_chrome() {
         sudo apt update
         sudo apt install -y google-chrome-stable
     fi
+}
+
+add_tailscale() {
+    # Check if Tailscale is installed
+    if command -v tailscale >/dev/null 2>&1; then
+        echo "Tailscale is already installed."
+        return 0
+    fi
+
+    echo "Installing Tailscale..."
+
+    # Detect Ubuntu version codename
+    . /etc/os-release
+    UBUNTU_CODENAME="$UBUNTU_CODENAME"  # e.g. noble, jammy, focal
+
+    if [ -z "$UBUNTU_CODENAME" ]; then
+        echo "Error: Could not detect Ubuntu codename. Cannot install Tailscale."
+        return 1
+    fi
+
+    echo "Detected Ubuntu codename: $UBUNTU_CODENAME"
+
+    # Add Tailscale signing key
+    echo "Adding Tailscale package signing key..."
+    curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${UBUNTU_CODENAME}.noarmor.gpg" | \
+        sudo tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null
+
+    # Add Tailscale repository
+    echo "Adding Tailscale repository..."
+    curl -fsSL "https://pkgs.tailscale.com/stable/ubuntu/${UBUNTU_CODENAME}.tailscale-keyring.list" | \
+        sudo tee /etc/apt/sources.list.d/tailscale.list >/dev/null
+
 }
 
 add_ppa_repositories() {
@@ -130,6 +184,10 @@ install_main(){
     # First install chrome
     install_chrome
 
+    # ----------------------------
+    # Install Tailscale
+    add_tailscale
+
 	# ----------------------------
 	# Snap Installation and Setup
 	# ----------------------------
@@ -162,6 +220,9 @@ install_main(){
         echo "pip3 is not installed. Installing pip3..."
         sudo apt install -y python3-pip
     fi
+
+    # Ensure and activate global Python virtual environment so pip installs go there
+    ensure_global_venv
 
     # ----------------------------
     # Flatpak Installation and Setup
@@ -278,7 +339,7 @@ install_main(){
             echo "Pip package '$package' is already installed. Skipping."
         else
             echo "Installing pip package '$package'..."
-            pip3 install --user "$package"
+            pip3 install "$package"
             if [ $? -eq 0 ]; then
                 echo "Successfully installed pip package '$package'."
             else
@@ -387,7 +448,36 @@ install_extras() {
 }
 
 install_ros2() {
-    echo "Installing ROS2 Humble..."
+    # Detect Ubuntu version
+    . /etc/os-release
+    UBUNTU_VERSION="$VERSION_ID"  # e.g. 22.04 or 24.04
+
+    echo "Detected Ubuntu version: $UBUNTU_VERSION"
+
+    ROS_DISTRO=""
+    ROS_SETUP_FILE=""
+    GAZEBO_PACKAGE=""
+
+    case "$UBUNTU_VERSION" in
+        "22.04")
+            ROS_DISTRO="humble"
+            ROS_SETUP_FILE="/opt/ros/humble/setup.bash"
+            GAZEBO_PACKAGE="ros-humble-ros-gz"
+            echo "Installing ROS2 Humble for Ubuntu 22.04..."
+            ;;
+        "24.04")
+            ROS_DISTRO="jazzy"
+            ROS_SETUP_FILE="/opt/ros/jazzy/setup.bash"
+            # ROS-GZ package name for Jazzy/Ubuntu 24.04 (update if needed)
+            GAZEBO_PACKAGE="ros-jazzy-ros-gz"
+            echo "Installing ROS2 Jazzy for Ubuntu 24.04..."
+            ;;
+        *)
+            echo "Unsupported Ubuntu version ($UBUNTU_VERSION) for automatic ROS2 install."
+            echo "Currently only 22.04 (Humble) and 24.04 (Jazzy) are handled."
+            return 1
+            ;;
+    esac
 
     # Configure locale
     sudo locale-gen en_US en_US.UTF-8
@@ -407,17 +497,24 @@ install_ros2() {
     sudo apt update
     sudo apt upgrade -y
 
-    # Install ROS2 Humble Desktop
-    sudo apt install ros-humble-desktop -y
+    # Install ROS2 Desktop
+    sudo apt install "ros-$ROS_DISTRO-desktop" -y
 
-    # Install Gazebo Fortress
-    sudo apt-get install ros-humble-ros-gz
+    # Install Gazebo / ros-gz package, if defined
+    if [[ -n "$GAZEBO_PACKAGE" ]]; then
+        sudo apt-get install -y "$GAZEBO_PACKAGE"
+    fi
 
     # Source ROS2 setup script
-    echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-    source ~/.bashrc
+    if [[ -n "$ROS_SETUP_FILE" && -f "$ROS_SETUP_FILE" ]]; then
+        echo "source $ROS_SETUP_FILE" >> ~/.bashrc
+        # shellcheck disable=SC1090
+        source "$ROS_SETUP_FILE"
+    else
+        echo "Warning: ROS setup file $ROS_SETUP_FILE not found. Skipping auto-sourcing."
+    fi
 
-    echo "ROS2 Humble installation complete."
+    echo "ROS2 $ROS_DISTRO installation complete."
 }
 
 change_max_file_watchers() {

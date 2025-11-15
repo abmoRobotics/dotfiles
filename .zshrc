@@ -147,14 +147,26 @@ function r() {
     if [ -d "./install" ]; then
         source ./install/setup.zsh
     else
-        source /opt/ros/humble/setup.zsh
+        if [ -n "$ROS_DISTRO" ] && [ -f "/opt/ros/$ROS_DISTRO/setup.zsh" ]; then
+            # Use currently selected ROS 2 distro
+            source "/opt/ros/$ROS_DISTRO/setup.zsh"
+        elif [ -f "/opt/ros/humble/setup.zsh" ]; then
+            # Fallback to humble
+            source /opt/ros/humble/setup.zsh
+        elif [ -f "/opt/ros/iron/setup.zsh" ]; then
+            source /opt/ros/iron/setup.zsh
+        elif [ -f "/opt/ros/jazzy/setup.zsh" ]; then
+            source /opt/ros/jazzy/setup.zsh
+        else
+            echo "No ROS 2 installation found under /opt/ros."
+        fi
     fi
-    echo "ROS 2 Humble sourced."
+    echo "ROS 2 sourced."
 }
 
 # Function to build ROS 2 workspace
 function rb() {
-    source /opt/ros/humble/setup.zsh
+    r
     colcon build
     if [ -f "./install/setup.zsh" ]; then
         source ./install/setup.zsh
@@ -163,6 +175,7 @@ function rb() {
         echo "Build complete, but no local 'install/setup.zsh' found to source."
     fi
 }
+
 
 
 # . "$HOME/.cargo/env"
@@ -234,7 +247,6 @@ fetch_system_info() {
     MEMORY_TOTAL=$(free -h | grep "Mem:" | awk '{print $2}')
 }
 #typeset -g POWERLEVEL9K_INSTANT_PROMPT=quiet
-source /opt/ros/humble/setup.zsh
 
 # Call the function to populate system info variables
 # Function for custom startup message
@@ -309,3 +321,37 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 eval $(keychain --eval --quiet id_ed25519)
 #export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
+# --- Global Python virtual environment ---
+GLOBAL_VENV="$HOME/.global-venv"
+if command -v python3 >/dev/null 2>&1; then
+    if [ ! -d "$GLOBAL_VENV" ]; then
+        python3 -m venv "$GLOBAL_VENV" 2>/dev/null || true
+    fi
+    if [ -f "$GLOBAL_VENV/bin/activate" ]; then
+        . "$GLOBAL_VENV/bin/activate"
+    fi
+fi
+
+# Function to activate global Python virtual environment
+function p() {
+    local GLOBAL_VENV="$HOME/.global-venv"
+
+    if [ ! -d "$GLOBAL_VENV" ]; then
+        echo "Global venv not found at $GLOBAL_VENV. Creating it..."
+        if command -v python3 >/dev/null 2>&1; then
+            python3 -m venv "$GLOBAL_VENV" || {
+                echo "Failed to create global venv."; return 1; }
+        else
+            echo "python3 not found. Cannot create global venv."; return 1
+        fi
+    fi
+
+    if [ -f "$GLOBAL_VENV/bin/activate" ]; then
+        . "$GLOBAL_VENV/bin/activate"
+        echo "Activated global venv at $GLOBAL_VENV."
+    else
+        echo "Activate script not found in $GLOBAL_VENV/bin/activate."
+        return 1
+    fi
+}

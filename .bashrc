@@ -109,11 +109,22 @@ fi
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
+fi
+
+# --- Global Python virtual environment ---
+GLOBAL_VENV="$HOME/.global-venv"
+if command -v python3 >/dev/null 2>&1; then
+        if [ ! -d "$GLOBAL_VENV" ]; then
+                python3 -m venv "$GLOBAL_VENV" 2>/dev/null || true
+        fi
+        if [ -f "$GLOBAL_VENV/bin/activate" ]; then
+                . "$GLOBAL_VENV/bin/activate"
+        fi
 fi
 
 ## Custom 
@@ -134,34 +145,59 @@ function c() {
     unset __conda_setup
 }
 
-# Function to source ROS environment
-function r() {
+# --- ROS 2 sourcing ---
+r() {
     if [ -d "./install" ]; then
-        if [ -f "./install/setup.bash" ]; then
-            source ./install/setup.bash
-            echo "Local ROS 2 Humble sourced."
-        else
-            echo "Local setup.bash does not exist."
-        fi
+        . ./install/setup.bash
     else
-        if [ -f "/opt/ros/humble/setup.bash" ]; then
-            source /opt/ros/humble/setup.bash
-            echo "System ROS 2 Humble sourced."
+        if [ -n "$ROS_DISTRO" ] && [ -f "/opt/ros/$ROS_DISTRO/setup.bash" ]; then
+            . "/opt/ros/$ROS_DISTRO/setup.bash"
+        elif [ -f "/opt/ros/humble/setup.bash" ]; then
+            . /opt/ros/humble/setup.bash
+        elif [ -f "/opt/ros/iron/setup.bash" ]; then
+            . /opt/ros/iron/setup.bash
+        elif [ -f "/opt/ros/jazzy/setup.bash" ]; then
+            . /opt/ros/jazzy/setup.bash
         else
-            echo "/opt/ros/humble/setup.bash does not exist."
+            echo "No ROS 2 installation found under /opt/ros."
         fi
     fi
+    echo "ROS 2 sourced."
 }
 
-# Function to build ROS 2 workspace
-function rb() {
-    source /opt/ros/humble/setup.bash
+# --- Build ROS 2 workspace ---
+rb() {
+    r
     colcon build
     if [ -f "./install/setup.bash" ]; then
-        source ./install/setup.bash
+        . ./install/setup.bash
         echo "Build complete and local workspace sourced."
     else
         echo "Build complete, but no local 'install/setup.bash' found to source."
+    fi
+}
+
+# Function to activate global Python virtual environment
+function p() {
+    local GLOBAL_VENV="$HOME/.global-venv"
+
+    if [ ! -d "$GLOBAL_VENV" ]; then
+        echo "Global venv not found at $GLOBAL_VENV. Creating it..."
+        if command -v python3 >/dev/null 2>&1; then
+            python3 -m venv "$GLOBAL_VENV" || {
+                echo "Failed to create global venv."; return 1; }
+        else
+            echo "python3 not found. Cannot create global venv."; return 1
+        fi
+    fi
+
+    if [ -f "$GLOBAL_VENV/bin/activate" ]; then
+        # shellcheck disable=SC1090
+        . "$GLOBAL_VENV/bin/activate"
+        echo "Activated global venv at $GLOBAL_VENV."
+    else
+        echo "Activate script not found in $GLOBAL_VENV/bin/activate."
+        return 1
     fi
 }
 
@@ -182,7 +218,8 @@ eval "$(zoxide init bash)"
 [ -f ~/.fzf.bash ] && source ~/.fzf.bash
 alias e='exit && exit'
 # eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-source /opt/ros/humble/setup.bash
+# source /opt/ros/humble/setup.bash
 export PATH=~/usdview/scripts/:$PATH
 eval $(keychain --eval --quiet id_ed25519)
 # export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+# source /opt/ros/jazzy/setup.bash
