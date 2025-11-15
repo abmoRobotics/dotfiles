@@ -34,6 +34,7 @@ apt_packages:
   - gvfs-backends
   - nodejs
   - npm
+  - keychain
 
 pip_packages:
   - torch
