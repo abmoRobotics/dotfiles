@@ -123,7 +123,7 @@ if command -v python3 >/dev/null 2>&1; then
                 python3 -m venv "$GLOBAL_VENV" 2>/dev/null || true
         fi
         if [ -f "$GLOBAL_VENV/bin/activate" ]; then
-                . "$GLOBAL_VENV/bin/activate"
+# . "$GLOBAL_VENV/bin/activate"  # commented out by conda initialize
         fi
 fi
 
@@ -135,10 +135,10 @@ function c() {
         eval "$__conda_setup"
     else
         if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
-            . "/home/anton/anaconda3/etc/profile.d/conda.sh"
+# . "/home/anton/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
             export TERMINFO=/usr/share/terminfo
         else
-            export PATH="/home/anton/anaconda3/bin:$PATH"
+# export PATH="/home/anton/anaconda3/bin:$PATH"  # commented out by conda initialize
             export TERMINFO=/usr/share/terminfo
         fi
     fi
@@ -193,7 +193,7 @@ function p() {
 
     if [ -f "$GLOBAL_VENV/bin/activate" ]; then
         # shellcheck disable=SC1090
-        . "$GLOBAL_VENV/bin/activate"
+# . "$GLOBAL_VENV/bin/activate"  # commented out by conda initialize
         echo "Activated global venv at $GLOBAL_VENV."
     else
         echo "Activate script not found in $GLOBAL_VENV/bin/activate."
@@ -223,3 +223,19 @@ export PATH=~/usdview/scripts/:$PATH
 eval $(keychain --eval --quiet id_ed25519)
 # export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 # source /opt/ros/jazzy/setup.bash
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/anton/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/anton/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/anton/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+

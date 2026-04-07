@@ -53,6 +53,7 @@ pip_packages:
   - rich
   - pyzotero
   - todoist-api-python
+  - pyyaml
 
 snap_packages:
   - "code --classic"    # Visual Studio Code
