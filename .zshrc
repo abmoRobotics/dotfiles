@@ -142,14 +142,37 @@ function c() {
     unset __conda_setup
 }
 
-# Function to source ROS environment
+# # Function to source ROS environment
+# function r() {
+#     if [ -d "./install" ]; then
+#         source ./install/setup.zsh
+#     else
+#         source /opt/ros/humble/setup.zsh
+#     fi
+#     echo "ROS 2 Humble sourced."
+# }
+
 function r() {
-    if [ -d "./install" ]; then
-        source ./install/setup.zsh
-    else
-        source /opt/ros/humble/setup.zsh
+    # Define your main workspace path here
+    local MAIN_WS="$HOME/ros2_zed_and_gps_ws"
+
+    # 1. Always source the base global distro first
+    source /opt/ros/humble/setup.zsh
+
+    # 2. Always source the specific ZED/GPS workspace if built
+    if [ -f "$MAIN_WS/install/setup.zsh" ]; then
+        source "$MAIN_WS/install/setup.zsh"
     fi
-    echo "ROS 2 Humble sourced."
+
+    # 3. Check for a local overlay
+    # We check if ./install exists AND ensure we aren't currently inside the 
+    # MAIN_WS (to avoid sourcing the same thing twice)
+    if [ -d "./install" ] && [ "$PWD" != "$MAIN_WS" ]; then
+        source ./install/setup.zsh
+        echo "ROS 2 Sourced: Global → zed_and_gps_ws → Local (./install)"
+    else
+        echo "ROS 2 Sourced: Global → zed_and_gps_ws"
+    fi
 }
 
 # Function to build ROS 2 workspace
@@ -309,3 +332,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 eval $(keychain --eval --quiet id_ed25519)
 #export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+export CUDA_HOME=/usr/local/cuda
+export PATH=$PATH:$CUDA_HOME/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64
+alias isaacsim='z isaacsim && ./_build/linux-x86_64/release/isaac-sim.sh'
+alias bolt="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia flatpak run com.adamcake.Bolt"
+export PATH="$HOME/.local/kitty.app/bin:$PATH"

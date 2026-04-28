@@ -73,9 +73,9 @@ client.connect_signal("property::name", function(c)
         --              text = title })
         if string.find(title, "phd_plan") then
             c:move_to_tag(awful.screen.focused().tags[5])
-        elseif string.find(title, "survey_paper") then
+        elseif string.find(title, "icra_paper") then
             c:move_to_tag(awful.screen.focused().tags[6])
-        elseif string.find(title, "isparo_paper_2025") then
+        elseif string.find(title, "icra2026") then
             c:move_to_tag(awful.screen.focused().tags[6])
         -- elseif string.find(title, ".config") or string.find(title, "awesome") or string.find(title, "dotfiles") then
         --     c:move_to_tag(awful.screen.focused().tags[9])

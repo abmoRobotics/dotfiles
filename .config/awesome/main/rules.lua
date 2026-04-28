@@ -88,7 +88,7 @@ function _M.get(clientkeys, clientbuttons)
 },
     -- { rule = { class = "code-phd-plan"},
     --   properties = { screen = 1, tag = "5" } },
-    -- { rule = { class = "code-survey"},
+    -- { rule = { class = "code-icra"},
     --   properties = { screen = 1, tag = "6" } },
     -- { rule = { class = "code-knowledge" },
     --   properties = { screen = 1, tag = "7" } },

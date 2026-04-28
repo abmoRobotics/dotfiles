@@ -124,10 +124,10 @@ function c() {
         eval "$__conda_setup"
     else
         if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
-            . "/home/anton/anaconda3/etc/profile.d/conda.sh"
+# . "/home/anton/anaconda3/etc/profile.d/conda.sh"  # commented out by conda initialize
             export TERMINFO=/usr/share/terminfo
         else
-            export PATH="/home/anton/anaconda3/bin:$PATH"
+# export PATH="/home/anton/anaconda3/bin:$PATH"  # commented out by conda initialize
             export TERMINFO=/usr/share/terminfo
         fi
     fi
@@ -186,3 +186,23 @@ source /opt/ros/humble/setup.bash
 export PATH=~/usdview/scripts/:$PATH
 eval $(keychain --eval --quiet id_ed25519)
 # export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/anton/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/anton/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/anton/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/anton/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+
+export CUDA_HOME=/usr/local/cuda
+export PATH=$PATH:$CUDA_HOME/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64
+alias isaacsim='z isaacsim && ./_build/linux-x86_64/release/isaac-sim.sh'
