@@ -34,6 +34,10 @@ apt_packages:
   - gvfs-backends
   - nodejs
   - npm
+  - keychain
+  - nautilus
+  - pipx
+  - python3-colcon-common-extensions
 
 pip_packages:
   - torch
@@ -49,6 +53,7 @@ pip_packages:
   - rich
   - pyzotero
   - todoist-api-python
+  - pyyaml
 
 snap_packages:
   - "code --classic"    # Visual Studio Code

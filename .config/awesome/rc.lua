@@ -8,7 +8,8 @@ local awful = require("awful")
 require("awful.autofocus")
 -- Widget and layout library
 local wibox = require("wibox")
-local vicious = require("vicious") 
+local vicious = require("vicious")
+local gfs = require("gears.filesystem")
 local spotify_widget = require("awesome-wm-widgets.spotify-widget.spotify")
 local todo_widget = require("awesome-wm-widgets.todo-widget.todo")
 local logout_menu_widget = require("awesome-wm-widgets.logout-menu-widget.logout-menu")
@@ -193,15 +194,62 @@ vicious.register(mem_widget, vicious.widgets.mem, function (widget, args)
 --                                           end))
  
 
-local function set_wallpaper(s)
-    -- Wallpaper
-    if beautiful.wallpaper then
-        local wallpaper = beautiful.wallpaper
-        -- If wallpaper is a function, call it with the screen
-        if type(wallpaper) == "function" then
-            wallpaper = wallpaper(s)
+local function pick_random_wallpaper(patterns)
+    local all_files = {}
+    local wallpapers_dir = os.getenv("HOME") .. "/.config/awesome/wallpapers/"
+
+    -- Use io.popen to list directory contents
+    local handle = io.popen("ls " .. wallpapers_dir)
+    if handle then
+        for filename in handle:lines() do
+            for _, pat in ipairs(patterns) do
+                if string.match(filename, pat) then
+                    table.insert(all_files, wallpapers_dir .. filename)
+                    break
+                end
+            end
         end
-        gears.wallpaper.maximized(wallpaper, s, true)
+        handle:close()
+    end
+
+    if #all_files == 0 then
+        return nil
+    end
+
+    math.randomseed(os.time())
+    local idx = math.random(1, #all_files)
+    return all_files[idx]
+end
+
+local function set_wallpaper(s)
+    local g = s.geometry
+    local aspect = g.width / g.height
+
+    local wp
+
+    if aspect > 2.0 then
+        -- Ultrawide (e.g., 21:9) – pick random ultrawide*.jpg/png
+        wp = pick_random_wallpaper({
+            "ultrawide.*%.jpg",
+            "ultrawide.*%.jpeg",
+            "ultrawide.*%.png",
+        })
+    elseif math.abs(aspect - 16/9) < 0.05 or math.abs(aspect - 16/10) < 0.05 then
+        -- 16:9 or 16:10 – pick random 16x_standard*.jpg/png
+        wp = pick_random_wallpaper({
+            "16x_standard.*%.jpg",
+            "16x_standard.*%.jpeg",
+            "16x_standard.*%.png",
+        })
+    end
+
+    if not wp then
+        -- Fallback: use any available wallpaper
+        wp = os.getenv("HOME") .. "/.config/awesome/wallpapers/SRC.jpg"
+    end
+
+    if wp then
+        gears.wallpaper.maximized(wp, s, true)
     end
 end
 
