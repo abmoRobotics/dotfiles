@@ -385,3 +385,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64
 alias isaacsim='z isaacsim && ./_build/linux-x86_64/release/isaac-sim.sh'
 alias bolt="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia flatpak run com.adamcake.Bolt"
 export PATH="$HOME/.local/kitty.app/bin:$PATH"
+
+# >>> Codex installer >>>
+export PATH="/home/anton/.local/bin:$PATH"
+# <<< Codex installer <<<

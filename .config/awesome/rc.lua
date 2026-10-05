@@ -28,7 +28,7 @@ local menubar = require("menubar")
 require("awful.hotkeys_popup.keys")
 
 -- Load Debian menu entries
-local debian = require("debian.menu")
+-- local debian = require("debian.menu")
 local has_fdo, freedesktop = pcall(require, "freedesktop")
 
 require("main.error-handling")
@@ -221,7 +221,26 @@ local function pick_random_wallpaper(patterns)
     return all_files[idx]
 end
 
+-- Laptop panel: rotate through these wallpapers instead of the random pick
+local laptop_output = "DP-0"
+local laptop_wallpapers = {
+    os.getenv("HOME") .. "/.config/awesome/wallpapers/laptop_journals.png",
+    os.getenv("HOME") .. "/.config/awesome/wallpapers/laptop_conferences.png",
+}
+local laptop_rotate_seconds = 300
+math.randomseed(os.time())
+local laptop_wallpaper_idx = math.random(#laptop_wallpapers)
+
+local function is_laptop_screen(s)
+    return s.outputs and s.outputs[laptop_output] ~= nil
+end
+
 local function set_wallpaper(s)
+    if is_laptop_screen(s) then
+        gears.wallpaper.maximized(laptop_wallpapers[laptop_wallpaper_idx], s, true)
+        return
+    end
+
     local g = s.geometry
     local aspect = g.width / g.height
 
@@ -255,6 +274,19 @@ end
 
 -- Re-set wallpaper when a screen's geometry changes (e.g. different resolution)
 screen.connect_signal("property::geometry", set_wallpaper)
+
+gears.timer {
+    timeout = laptop_rotate_seconds,
+    autostart = true,
+    callback = function()
+        laptop_wallpaper_idx = laptop_wallpaper_idx % #laptop_wallpapers + 1
+        for s in screen do
+            if is_laptop_screen(s) then
+                set_wallpaper(s)
+            end
+        end
+    end,
+}
 
 local deco = {
 	-- wallpaper = require("deco.wallpaper"),
