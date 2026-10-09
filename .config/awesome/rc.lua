@@ -356,23 +356,19 @@ awful.screen.connect_for_each_screen(function(s)
         },
     }
 
-    -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s,height = 40 })
-    local centered_tasklist = wibox.container.place(s.mytasklist, "center", "center")
-    -- Add widgets to the wibox
-    s.mywibox:setup {
-        layout = wibox.layout.align.horizontal,
-        { -- Left widgets
+    -- Right widgets: portrait (9:16) screens only get clock + battery, to leave room for the tasklist
+    local right_widgets
+    if is_portrait then
+        right_widgets = {
             layout = wibox.layout.fixed.horizontal,
-            -- mylauncher,
-            s.mytaglist,
-            s.mypromptbox,
-            wibox.widget.systray(),
-        },
-        
-        centered_tasklist, -- Middle widget
-        { -- Right widgets
-        
+            time_widget,
+            battery_widget({
+                show_current_level = true,
+                display_notification = true,
+            }),
+        }
+    else
+        right_widgets = {
             layout = wibox.layout.fixed.horizontal,
             -- mykeyboardlayout,
             spotify_widget({
@@ -411,7 +407,25 @@ awful.screen.connect_for_each_screen(function(s)
                 font = 'Play 14',
                 onlock = function() awful.spawn.with_shell('i3lock-fancy') end
             },
+        }
+    end
+
+    -- Create the wibox
+    s.mywibox = awful.wibar({ position = "top", screen = s,height = 40 })
+    local centered_tasklist = wibox.container.place(s.mytasklist, "center", "center")
+    -- Add widgets to the wibox
+    s.mywibox:setup {
+        layout = wibox.layout.align.horizontal,
+        { -- Left widgets
+            layout = wibox.layout.fixed.horizontal,
+            -- mylauncher,
+            s.mytaglist,
+            s.mypromptbox,
+            wibox.widget.systray(),
         },
+        
+        centered_tasklist, -- Middle widget
+        right_widgets,
     }
 end)
 -- awful.screen.connect_for_each_screen(function(s)
