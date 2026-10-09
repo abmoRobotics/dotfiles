@@ -1,5 +1,12 @@
 local awful = require("awful")
 local beautiful = require("beautiful")
+local gears = require("gears")
+
+-- Icons for clients that don't provide one themselves (keyed by WM_CLASS)
+local fallback_icons = {
+    slack = "/snap/slack/current/usr/share/pixmaps/slack.png",
+}
+
 -- {{{ Signals
 -- Signal function to execute when a new client appears.
 client.connect_signal("manage", function (c)
@@ -12,6 +19,15 @@ client.connect_signal("manage", function (c)
       and not c.size_hints.program_position then
         -- Prevent clients from being unreachable after screen count changes.
         awful.placement.no_offscreen(c)
+    end
+
+    -- Some apps (e.g. Slack snap) don't set _NET_WM_ICON, so the tasklist shows nothing.
+    if not c.icon then
+        local path = fallback_icons[c.class]
+            or require("menubar.utils").lookup_icon(c.class and c.class:lower())
+        if path and gears.filesystem.file_readable(path) then
+            c.icon = gears.surface(path)._native
+        end
     end
 end)
 
