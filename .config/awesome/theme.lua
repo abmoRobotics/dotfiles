@@ -18,6 +18,9 @@ theme.tasklist_disable_task_name = true
 
 -- theme.font          = "sans 8"
 theme.font          = "SauceCodePro Nerd Font Mono Regular 12"
+-- Smaller font for the top bar (tag names + text widgets), leaves room for icons
+theme.bar_font      = "SauceCodePro Nerd Font Mono Regular 9"
+theme.taglist_font  = theme.bar_font
 
 -- theme.bg_normal     = "#222222"
 -- theme.bg_focus      = "#535d6c"

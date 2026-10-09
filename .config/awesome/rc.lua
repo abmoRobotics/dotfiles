@@ -153,6 +153,11 @@ local mem_widget = wibox.widget.textbox()
 vicious.register(mem_widget, vicious.widgets.mem, function (widget, args)
 	return string.format("<span foreground='%s'> RAM:</span> <span foreground='%s'>%d%%</span>", label_color, info_color, args[1]) end, 15) --Updates every 15 seconds
 	
+-- Use the smaller bar font for the text widgets
+for _, w in ipairs({ date_widget, time_widget, kernel_widget, cpu_widget, mem_widget }) do
+	w.font = beautiful.bar_font
+end
+
 -- Create a wibox for each screen and add it
 -- local taglist_buttons = gears.table.join(
 --                     awful.button({ }, 1, function(t) t:view_only() end),
