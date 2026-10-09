@@ -98,7 +98,9 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
     -- start application keybindings
-    awful.key({ modkey }, "b",     function () awful.util.spawn("google-chrome") end,
+    -- no startup notification: Chrome's X11 startup-id handling stops new windows from
+    -- tracking resizes, leaving black areas (https://issuetracker.google.com/issues/554798395)
+    awful.key({ modkey }, "b",     function () awful.spawn("google-chrome", false) end,
               {description = "browser", group = "launcher"}),
 
     -- awful.key({ modkey }, "f",     function () awful.util.spawn("thunar") end,
