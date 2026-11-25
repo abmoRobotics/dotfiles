@@ -157,7 +157,7 @@ function r() {
     local MAIN_WS="$HOME/ros2_zed_and_gps_ws"
 
     # 1. Always source the base global distro first
-    source /opt/ros/humble/setup.zsh
+    source /opt/ros/jazzy/setup.zsh
 
     # 2. Always source the specific ZED/GPS workspace if built
     if [ -f "$MAIN_WS/install/setup.zsh" ]; then
@@ -216,7 +216,6 @@ function rb() {
 
 
 
-eval "$(zoxide init posix --hook prompt)"
 eval "$(zoxide init zsh)"
 
 # [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -387,5 +386,5 @@ alias bolt="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia flatpak
 export PATH="$HOME/.local/kitty.app/bin:$PATH"
 
 # >>> Codex installer >>>
-export PATH="/home/anton/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 # <<< Codex installer <<<

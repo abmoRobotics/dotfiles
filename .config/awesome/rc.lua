@@ -301,6 +301,18 @@ local deco = {
 local taglist_buttons = deco.taglist()
 local tasklist_buttons = deco.tasklist()
 
+-- Portrait screens show tag numbers instead of names (names are kept so rules still match),
+-- dimmed when the tag has no clients
+local taglist_empty_color = "#5C6B73"
+local function update_tag_number(self, t)
+    local color = (t.urgent and beautiful.taglist_fg_urgent)
+        or (t.selected and beautiful.taglist_fg_focus)
+        or (#t:clients() == 0 and taglist_empty_color)
+        or beautiful.fg_normal
+    self:get_children_by_id("index_role")[1].markup =
+        string.format("<span foreground='%s'>%d</span>", color, t.index)
+end
+
 
 
 awful.screen.connect_for_each_screen(function(s)
@@ -332,7 +344,7 @@ awful.screen.connect_for_each_screen(function(s)
                            awful.button({ }, 4, function () awful.layout.inc( 1) end),
                            awful.button({ }, 5, function () awful.layout.inc(-1) end)))
     -- Create a taglist widget
-    s.mytaglist = awful.widget.taglist {
+    local taglist_args = {
         screen  = s,
         filter  = awful.widget.taglist.filter.all,
         layout  = {
@@ -341,6 +353,26 @@ awful.screen.connect_for_each_screen(function(s)
         },
         buttons = taglist_buttons
     }
+    if is_portrait then
+        taglist_args.widget_template = {
+            {
+                {
+                    id     = "index_role",
+                    align  = "center",
+                    font   = beautiful.taglist_font,
+                    widget = wibox.widget.textbox,
+                },
+                left   = 6,
+                right  = 6,
+                widget = wibox.container.margin,
+            },
+            id              = "background_role",
+            widget          = wibox.container.background,
+            create_callback = update_tag_number,
+            update_callback = update_tag_number,
+        }
+    end
+    s.mytaglist = awful.widget.taglist(taglist_args)
 
     -- Create a tasklist widget
     s.mytasklist = awful.widget.tasklist {
@@ -405,7 +437,7 @@ awful.screen.connect_for_each_screen(function(s)
             },
             logout_menu_widget{
                 font = 'Play 14',
-                onlock = function() awful.spawn.with_shell('i3lock-fancy') end
+                onlock = function() awful.spawn.with_shell('~/.config/awesome/scripts/lock.sh') end
             },
         }
     end
@@ -416,6 +448,8 @@ awful.screen.connect_for_each_screen(function(s)
     -- Add widgets to the wibox
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
+        -- Portrait: center the tasklist on the whole bar, not just the gap between left and right
+        expand = is_portrait and "outside" or "inside",
         { -- Left widgets
             layout = wibox.layout.fixed.horizontal,
             -- mylauncher,
@@ -425,7 +459,11 @@ awful.screen.connect_for_each_screen(function(s)
         },
         
         centered_tasklist, -- Middle widget
-        right_widgets,
+        { -- Right widgets, kept against the right edge when expand = "outside"
+            right_widgets,
+            halign = "right",
+            widget = wibox.container.place,
+        },
     }
 end)
 -- awful.screen.connect_for_each_screen(function(s)

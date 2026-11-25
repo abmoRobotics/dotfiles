@@ -245,3 +245,4 @@ export PATH=$PATH:$CUDA_HOME/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CUDA_HOME/lib64
 alias isaacsim='z isaacsim && ./_build/linux-x86_64/release/isaac-sim.sh'
 source /opt/ros/jazzy/setup.bash
+export ROS_DOMAIN_ID=50

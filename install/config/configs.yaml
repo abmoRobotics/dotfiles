@@ -12,6 +12,7 @@ configs:
 - .fzf.bash
 - .p10k.zsh
 - .zshrc
+- .local/bin/forward
 oh_my_zsh:
   install: true
   theme: powerlevel10k

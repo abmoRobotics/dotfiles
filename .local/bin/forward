@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# forward: share this PC's internet with a robot it reaches directly (USB or Ethernet)
+# and open an SSH shell on it.
+#
+#   forward ssh spacer@192.168.55.1
+#   forward leorover@192.168.88.9
+#   forward ssh -i ~/.ssh/lab user@robot     # ssh options go before the host
+#
+# This PC: NAT for the robot's IP. Robot: default route via this PC, this PC's DNS
+# servers (systemd-resolved), clock set from this PC if it is off by more than a minute.
+#
+# Undo: a root systemd-run job on each side restores things when the session ends, also
+# when the cable is pulled or the terminal is closed. The state from before forward is saved
+# once in /run (a reboot clears it, like the changes). After a dropped session the next
+# session keeps it, and the newest session restores it when it ends. The robot side also
+# restores once this PC stops answering pings for ~30 s. By hand, on the robot:
+#   sudo sh /run/forward-robot.sh restore
+set -uo pipefail
+
+die() { echo "forward: $*" >&2; exit 1; }
+# Print the word after $1 in `ip route get` output.
+field() { awk -v k="$1" '{for (i = 1; i < NF; i++) if ($i == k) {print $(i + 1); exit}}'; }
+
+[[ ${1:-} == ssh ]] && shift
+(( $# )) || { echo "usage: forward [ssh] [ssh options] [user@]host" >&2; exit 2; }
+dest=${!#}
+opts=("${@:1:$#-1}")
+
+host=$(ssh -G "${opts[@]}" "$dest" 2>/dev/null | awk '$1 == "hostname" {print $2; exit}')
+robot=$(getent ahostsv4 "${host:-$dest}" | awk 'NR == 1 {print $1}')
+[[ -n $robot ]] || die "cannot resolve $dest"
+
+inet_route=$(ip -4 route get 1.1.1.1 2>/dev/null) || die "this PC has no internet route"
+robot_route=$(ip -4 route get "$robot" 2>/dev/null) || die "no route to $robot"
+[[ $robot_route != *" via "* ]] || die "$robot is not on a directly connected network (cable in?)"
+wan=$(field dev <<<"$inet_route")
+lan=$(field dev <<<"$robot_route")
+gw=$(field src <<<"$robot_route")
+[[ $lan != "$wan" ]] || die "$robot is on the internet interface $wan; it can use that network's router"
+
+# DNS for the robot: this PC's servers first (some networks block public DNS), public ones as fallback.
+dns=$({ resolvectl dns "$wan"; grep '^nameserver' /etc/resolv.conf; echo 1.1.1.1 8.8.8.8; } 2>/dev/null |
+  grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | awk '!/^127\./ && !seen[$0]++' | xargs)
+
+# NAT for one robot, run as root: nat add|del ROBOT LAN TAG. Rules are tagged per session, and
+# the last session out puts ip_forward back to its value from before the first one.
+nat() {
+  local op=$1 robot=$2 lan=$3 tag=$4 flag=-D r table chain spec
+  exec 9>/run/forward-nat.lock && flock 9
+  if [[ $op == add ]]; then
+    flag=-I
+    [[ -e /run/forward-nat.ip_forward ]] || sysctl -n net.ipv4.ip_forward >/run/forward-nat.ip_forward
+    sysctl -qw net.ipv4.ip_forward=1 || return 1
+  fi
+  for r in "nat POSTROUTING -s $robot ! -o $lan -j MASQUERADE" \
+    "filter FORWARD -i $lan -s $robot -j ACCEPT" \
+    "filter FORWARD -o $lan -d $robot -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT"; do
+    read -r table chain spec <<<"$r"
+    # shellcheck disable=SC2086  # $spec is a list of iptables arguments
+    iptables -w -t "$table" "$flag" "$chain" -m comment --comment "$tag" $spec || [[ $op == del ]] || return 1
+  done
+  if [[ $op == del && -e /run/forward-nat.ip_forward ]] &&
+    ! iptables -w -S FORWARD | grep -q -- '--comment forward-'; then
+    sysctl -qw net.ipv4.ip_forward="$(</run/forward-nat.ip_forward)" && rm -f /run/forward-nat.ip_forward
+  fi
+}
+
+echo "forward: internet $wan -> $lan ($gw) -> $dest"
+sudo -v || exit 1
+tag=forward-$$
+# Undo as root once this script exits, however it exits.
+sudo systemd-run --quiet --collect bash -c \
+  "$(declare -f nat); while kill -0 $$ 2>/dev/null; do sleep 1; done; nat del $robot $lan $tag" ||
+  die "systemd-run failed"
+sudo bash -c "$(declare -f nat); nat add $robot $lan $tag" || die "could not set up NAT"
+
+# Runs on the robot as the SSH user: bash -c "<this>" forward GW TIME [DNS...]
+remote=$(cat <<'EOF'
+gw=$1 now=$2
+shift 2
+skew=$(( now - $(date +%s) ))
+asroot() { if [[ $(id -u) == 0 ]]; then "$@"; else sudo "$@"; fi; }
+[[ $(id -u) == 0 ]] || sudo -v || exit 1
+
+# Root helper. Replaced with mv, so a watch job that is still running keeps reading its own copy.
+asroot sh -c 'cat >/run/forward-robot.sh.new && mv /run/forward-robot.sh.new /run/forward-robot.sh' <<'HELPER'
+# forward helper, written by forward at every session.
+#   start GW PID [DNS...]  route and DNS via GW; the first session also saves the state from before
+#   watch GW PID           wait for shell PID to end (or GW to stop answering), then restore if PID is the newest session
+#   restore                put back the saved default route and DNS
+state=/run/forward-robot
+conf=/run/systemd/resolved.conf.d/forward.conf
+exec 9>/run/forward-robot.lock
+
+restore() {
+  [ -d $state ] || return 0
+  gw=$(cat $state/gw)
+  # Only the metric-0 route via GW is ours; other routes via GW stay.
+  if ip -4 route show default via "$gw" | grep -qv metric; then ip -4 route del default via "$gw" metric 0; fi
+  [ -s $state/route ] && ip -4 route replace $(cat $state/route)
+  if [ -e $conf ]; then rm -f $conf; systemctl restart systemd-resolved; fi
+  rm -rf $state
+}
+
+case $1 in
+start)
+  gw=$2 pid=$3
+  shift 3
+  flock 9
+  mkdir -p $state
+  # Saved only once: a session that never cleaned up must not pass its own route off as the original.
+  [ -e $state/route ] || ip -4 route show default | grep -v metric | head -n 1 |
+    sed 's/ linkdown//; s/ dead//' >$state/route
+  echo "$gw" >$state/gw
+  echo "$pid" >$state/owner
+  ip -4 route replace default via "$gw" metric 0 || exit 1
+  if [ $# -gt 0 ] && systemctl is-active --quiet systemd-resolved; then
+    mkdir -p ${conf%/*}
+    printf '[Resolve]\nDNS=%s\n' "$*" >$conf
+    systemctl restart systemd-resolved
+  fi
+  ;;
+watch)
+  gw=$2 pid=$3 miss=0 probe=0
+  # 10 failed pings in a row (~30 s) count as a lost connection, if GW answers pings at all.
+  ping -c1 -W2 "$gw" >/dev/null 2>&1 && probe=1
+  while kill -0 "$pid" 2>/dev/null; do
+    if [ $probe = 1 ]; then
+      if ping -c1 -W2 "$gw" >/dev/null 2>&1; then miss=0; else miss=$((miss + 1)); fi
+      [ $miss -ge 10 ] && break
+    fi
+    sleep 1
+  done
+  flock 9
+  # If a newer session took over, that one restores when it ends.
+  [ "$(cat $state/owner 2>/dev/null)" = "$pid" ] && restore
+  ;;
+restore)
+  flock 9
+  restore
+  ;;
+esac
+HELPER
+asroot systemd-run --quiet --collect sh /run/forward-robot.sh watch "$gw" $$ || exit 1
+asroot sh /run/forward-robot.sh start "$gw" $$ "$@" || exit 1
+if (( ${skew#-} > 60 )); then
+  asroot date -u -s "@$(( $(date +%s) + skew ))" >/dev/null &&
+    echo "forward: robot clock was ${skew}s off, set it from this PC"
+fi
+echo "forward: robot online via $gw, DNS $*. Exit the shell to undo."
+exec "${SHELL:-/bin/bash}" -l
+EOF
+)
+
+# The robot script travels base64-encoded, so no login shell on the robot can mangle its quoting.
+ssh -t "${opts[@]}" -o ServerAliveInterval=10 -o ServerAliveCountMax=3 "$dest" \
+  "bash -c \"\$(echo $(base64 -w0 <<<"$remote") | base64 -d)\" forward $gw $(date +%s) $dns"
